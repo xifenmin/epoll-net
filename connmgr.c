@@ -135,6 +135,12 @@ int SendData(ConnObj *conntobj,unsigned char *buffer, int len) {
 	return send_len;
 }
 
+int ReadData(ConnObj *conntobj,unsigned char *buffer)
+{
+	int nLen = 0;
+	return nLen;
+}
+
 void Nodelay(ConnObj *connobj,int enable=1)
 {
 	int opt = enable? 1 : 0;

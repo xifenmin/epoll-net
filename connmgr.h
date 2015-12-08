@@ -48,6 +48,8 @@ int SetConn(ConnMgr *connmgr,ConnObj *conntobj);
 ConnObj *GetConn(ConnMgr *connmgr);
 /*发送数据*/
 int SendData(ConnObj *conntobj,unsigned char *ptr,int len);
+/*接收数据*/
+int ReadData(ConnObj *conntobj,unsigned char *buffer);
 
 void Nodelay(ConnObj *connobj,int enable=1);
 void Keepalive(ConnObj *connobj,int enable=1);
