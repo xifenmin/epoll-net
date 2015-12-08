@@ -30,9 +30,9 @@ typedef int (*event_callback)(ConnObj *conn,int events);
 typedef struct tagEpollBase EpollBase;
 typedef struct tagEpollObj  EpollObj;
 
-EpollObj *Epoll_Create_Obj(int events,event_callback cb);
+EpollObj *Epoll_Create_Obj(int events);
 void Epoll_Destory_Obj(EpollObj *epoll_obj);
-EpollBase *Init_EpollBase(int events,event_callback cb);
+EpollBase *Init_EpollBase(int events);
 void  Clear_EpollBase(EpollBase *evb);
 
 /*epoll 事件添加*/

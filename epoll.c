@@ -20,14 +20,14 @@ struct tagEpollObj
 	epoll_waitevent      wait;
 };
 
-EpollObj *Epoll_Create_Obj(int events,event_callback cb)
+EpollObj *Epoll_Create_Obj(int events)
 {
 	EpollObj *epoll_obj = NULL;
 
 	epoll_obj = (EpollObj *)malloc(sizeof(EpollObj));
 
 	if (NULL != epoll_obj){
-		epoll_obj->epollbase = Init_EpollBase(events,cb);
+		epoll_obj->epollbase = Init_EpollBase(events);
 		epoll_obj->add       = Epoll_Event_AddConn;
 		epoll_obj->del       = Epoll_Event_DelConn;
 		epoll_obj->modify    = Epoll_Event_ModifyConn;
@@ -46,7 +46,7 @@ void Epoll_Destory_Obj(EpollObj *epoll_obj)
     }
 }
 
-EpollBase *Init_EpollBase(int events,event_callback cb)
+EpollBase *Init_EpollBase(int events)
  {
 	EpollBase *evb = NULL;
 
@@ -70,7 +70,7 @@ EpollBase *Init_EpollBase(int events,event_callback cb)
 
 	if (evb != NULL){
         evb->epollhandle = ephandle;
-        evb->cb          = cb;
+        evb->cb          = Epoll_Event_Callback;
         evb->event       = event;
 	}
 

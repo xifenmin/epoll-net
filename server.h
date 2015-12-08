@@ -16,7 +16,7 @@ extern "C" {
 
 typedef struct tagServerObj   ServerObj;
 
-ServerObj *Server_Create(int events,event_callback cb);
+ServerObj *Server_Create(int events);
 void Server_Clear(ServerObj *serverobj);
 int  StartServer(ServerObj *serverobj,char ip,unsigned char port);
 int  Server_Listen(ServerObj *serverobj);

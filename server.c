@@ -24,7 +24,7 @@ int StartServer(ServerObj *serverobj,char ip,unsigned char port)
 
 	if (serverobj == NULL){
 
-		serverobj = Server_Create(1024,Epoll_Event_Callback);
+		serverobj = Server_Create(1024);
 
 		if (NULL != serverobj){
 
@@ -43,7 +43,7 @@ int StartServer(ServerObj *serverobj,char ip,unsigned char port)
 	return ret;
 }
 
-ServerObj *Server_Create(int events,event_callback cb)
+ServerObj *Server_Create(int events)
 {
 	ServerObj *serverobj = NULL;
 
