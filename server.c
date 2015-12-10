@@ -15,9 +15,11 @@ struct tagServerObj
 	ConnObj    *connobj;/*server 端连接描述符*/
 	LockerObj  *lockerobj;
 	Threadpool *thread_pool;//server 线程池
+	DataQueue  *data_queue;/*接收数据队列*/
+	Proc_Read   procread;/*客户端回调*/
 };
 
-int StartServer(ServerObj *serverobj,char ip,unsigned char port)
+int StartServer(ServerObj *serverobj,char ip,Proc_Read procread,unsigned char port)
 {
 	int ret = 0;
 	int server_socket = 0;
@@ -33,10 +35,12 @@ int StartServer(ServerObj *serverobj,char ip,unsigned char port)
 			serverobj->connobj->fd   = server_socket;
 			serverobj->connobj->ip   = ip;
 			serverobj->connobj->port = port;
+			serverobj->procread      = procread;/*注册调用者接收回调函数*/
 
 	        ret = Server_Listen(serverobj);
 
 	        Threadpool_Addtask(serverobj->thread_pool,&Server_Loop,"Server_Loop",strlen("Server_Loop"),serverobj);
+	        Threadpool_Addtask(serverobj->thread_pool,&Server_Loop,"Server_Process",strlen("Server_Process"),serverobj);
 		}
 	}
 
@@ -55,6 +59,7 @@ ServerObj *Server_Create(int events)
 		serverobj->connmgr     = ConnMgr_Create();
 		serverobj->lockerobj   = LockerObj_Create();
 		serverobj->connobj     = CreateNewConnObj();
+		serverobj->data_queue  = DataQueue_Create();
 		serverobj->thread_pool = Threadpool_Create(1);/*Proactor 模式，单线程*/
 	}
 
@@ -64,7 +69,6 @@ ServerObj *Server_Create(int events)
 void Server_Clear(ServerObj *serverobj)
 {
     if (serverobj != NULL){
-
     	Threadpool_Destroy(serverobj->thread_pool);
     	ConnMgr_Clear(serverobj->connmgr);
     	Locker_Lock(serverobj->lockerobj);
@@ -120,6 +124,7 @@ int  Server_Accept(ServerObj *serverobj)
 {
 	int client_sock;
     struct sockaddr_in addr;
+
 	socklen_t addrlen = sizeof(addr);
 	ConnObj *_connobj = NULL;
 	struct linger opt = {1,0};
@@ -165,14 +170,41 @@ sock_err:
 	}
 }
 
+void Server_Process(void *argv)
+{
+	ConnObj *_connobj    = NULL;
+	ServerObj *serverobj = (ServerObj *)argv;
+
+	for(;;){
+
+		if (NULL != serverobj){
+		   _connobj = DataQueue_Pop(serverobj->data_queue);
+
+		   if (NULL != _connobj){
+                //回调用户接口函数
+			   serverobj->procread(_connobj);
+		   }
+		}
+	}
+}
+
 void Server_Loop(void *argv)
 {
+	int datalen = 0;
+
+	ConnObj *_connobj    = NULL;
 	ServerObj *serverobj = (ServerObj *)argv;
 
 	if (NULL != serverobj){
 
 		for(;;){
-			serverobj->epollobj->wait(serverobj->epollobj->epollbase,0);
+			datalen = serverobj->epollobj->wait(serverobj->epollobj->epollbase,0);
+			if (datalen >0){
+				_connobj = (ConnObj *)serverobj->epollobj->epollbase->event->data.ptr;
+				if (NULL != _connobj){
+					DataQueue_Push(serverobj->data_queue,_connobj);
+				}
+			}
 		}
 	}
 }

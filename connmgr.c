@@ -14,13 +14,13 @@ struct tagConnObj {
 	unsigned char port;
 	SendData  send;
 	ReadData  recv;
-	unsigned char *recvptr;/*接收数据指针*/
-	unsigned char *sendptr;/*发送数据指针*/
-	unsigned int  recvlen;/*接收数据长度*/
-	unsigned int  sendlen;/*发送数据长度*/
-	Nodelay   nodelay;
-	Keepalive keepalive;
-	Noblock   noblock;
+	unsigned char  *recvptr;/*接收数据指针*/
+	unsigned char  *sendptr;/*发送数据指针*/
+	unsigned int   recvlen;/*接收数据长度*/
+	unsigned int   sendlen;/*发送数据长度*/
+	Nodelay        nodelay;
+	Keepalive      keepalive;
+	Noblock        noblock;
 };
 
 struct tagConntMgr {
@@ -31,7 +31,6 @@ struct tagConntMgr {
 };
 
 ConnMgr *ConnMgr_Create(void) {
-
 	ConnMgr *connmgr = NULL;
 
 	connmgr = (ConnMgr *) malloc(sizeof(ConnMgr));
@@ -107,6 +106,10 @@ ConnObj *GetConn(ConnMgr *connmgr) {
 			    _conntobj->type      = TCP;
 				_conntobj->activity  = SOCKET_CONNCLOSED;
 				_conntobj->send      = SendData;
+				_conntobj->sendptr   = NULL;
+				_conntobj->sendlen   = 0;
+				_conntobj->recvptr   = NULL;
+				_conntobj->recvlen   = 0;
 				_conntobj->recv      = ReadData;
 				_conntobj->nodelay   = Nodelay;
 				_conntobj->keepalive = Keepalive;

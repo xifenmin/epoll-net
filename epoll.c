@@ -248,7 +248,6 @@ int Epoll_Event_Callback(ConnObj *conn,int events)
 	}
 
 	if (EPOLLOUT & events){ /*检测到写事件*/
-
 		if (conn->sendptr != NULL && conn->sendlen > 0 ){
 			sendlen = conn->send(conn);
 		}
