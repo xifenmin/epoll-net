@@ -58,6 +58,7 @@ static void *Threadpool_Run(void *threadpool_obj) {
 }
 //-----------------------------------------------------------
 int Threadpool_Free(Threadpool *thread_pool) {
+
 	if (NULL == thread_pool) {
 		return -1;
 	}

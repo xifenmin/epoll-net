@@ -13,6 +13,11 @@ struct tagConnObj {
 	char      ip[32];
 	unsigned char port;
 	SendData  send;
+	ReadData  recv;
+	unsigned char *recvptr;/*接收数据指针*/
+	unsigned char *sendptr;/*发送数据指针*/
+	unsigned int  recvlen;/*接收数据长度*/
+	unsigned int  sendlen;/*发送数据长度*/
 	Nodelay   nodelay;
 	Keepalive keepalive;
 	Noblock   noblock;
@@ -102,6 +107,7 @@ ConnObj *GetConn(ConnMgr *connmgr) {
 			    _conntobj->type      = TCP;
 				_conntobj->activity  = SOCKET_CONNCLOSED;
 				_conntobj->send      = SendData;
+				_conntobj->recv      = ReadData;
 				_conntobj->nodelay   = Nodelay;
 				_conntobj->keepalive = Keepalive;
 				_conntobj->noblock   = Noblock;
@@ -116,7 +122,7 @@ ConnObj *GetConn(ConnMgr *connmgr) {
 	return _conntobj;
 }
 
-int SendData(ConnObj *conntobj,unsigned char *buffer, int len) {
+int SendData(ConnObj *conntobj) {
 
 	int ret = 0;
 	int send_len = 0;
@@ -126,7 +132,7 @@ int SendData(ConnObj *conntobj,unsigned char *buffer, int len) {
 	}
 
 	while (len > 0) {
-		ret = write(conntobj->fd,ptr, nlen);
+		ret = write(conntobj->fd,conntobj->sendptr, conntobj->sendlen);
 		len -= ret;
 		ptr += ret;
 		send_len += ret;
@@ -135,9 +141,25 @@ int SendData(ConnObj *conntobj,unsigned char *buffer, int len) {
 	return send_len;
 }
 
-int ReadData(ConnObj *conntobj,unsigned char *buffer)
+int ReadData(ConnObj *conntobj,unsigned char *ptr,int len)
 {
 	int nLen = 0;
+
+	if (NULL == conntobj){
+		return -1;
+	}
+
+	nLen = read(conntobj->fd,ptr,len);
+
+	if (nLen < 0) {
+		if (errno == EAGAIN || errno == EINTR){
+			//尝试再读一次。
+		}
+	}else if (nLen == 0){
+		printf("connect closed\n");
+		return -1;
+	}
+
 	return nLen;
 }
 

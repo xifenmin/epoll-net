@@ -16,7 +16,6 @@ extern "C" {
 #endif
 
 #define  EPOLL_EVENTS_NUM 1024
-
 #define  EVENT_READ       0x0000ff
 #define  EVENT_WRITE      0x00ff00
 #define  EVENT_ERR        0xff0000

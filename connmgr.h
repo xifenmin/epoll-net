@@ -33,7 +33,8 @@ typedef void (*Nodelay)(ConnObj *connobj,int enable=1);
 
 typedef int (*SetConn)(ConnMgr *connmgr,ConnObj *conntobj);
 typedef ConnObj *(*GetConn)(ConnMgr *connmgr);
-typedef int (*SendData)(ConnMgr *connmgr,unsigned char *buffer,int len);
+typedef int (*SendData)(ConnMgr *connmgr);/*发送回调*/
+typedef int (*ReadData)(ConnMgr *connmgr,unsigned char *ptr,int len);/*接收回调*/
 
 typedef struct tagConnObj       ConnObj;
 typedef struct tagConntMgr      ConnMgr;
@@ -47,9 +48,9 @@ int SetConn(ConnMgr *connmgr,ConnObj *conntobj);
 /*pop 从连接对象池中pop一个对象出来*/
 ConnObj *GetConn(ConnMgr *connmgr);
 /*发送数据*/
-int SendData(ConnObj *conntobj,unsigned char *ptr,int len);
+int SendData(ConnObj *conntobj);
 /*接收数据*/
-int ReadData(ConnObj *conntobj,unsigned char *buffer);
+int ReadData(ConnObj *conntobj,unsigned char *ptr,int len);
 
 void Nodelay(ConnObj *connobj,int enable=1);
 void Keepalive(ConnObj *connobj,int enable=1);
