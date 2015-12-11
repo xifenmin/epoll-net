@@ -18,7 +18,7 @@ typedef struct tagThreadpool Threadpool;
 
 Threadpool *Threadpool_Create(unsigned int thread_count);
 int Threadpool_Destroy(Threadpool *thread_pool);
-int Threadpool_Addtask(Threadpool *thread_pool, void (*callback)(void *),char *name,int namelen,void *arg);
+int Threadpool_Addtask(Threadpool *thread_pool, callback cb,char *name,void *arg);
 
 #ifdef __cplusplus
 }

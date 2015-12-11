@@ -11,7 +11,7 @@
 
 #include "connmgr.h"
 
-#ifdef __cplusplus {
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -20,14 +20,14 @@ extern "C" {
 #define  EVENT_WRITE      0x00ff00
 #define  EVENT_ERR        0xff0000
 
+typedef struct tagEpollBase EpollBase;
+typedef struct tagEpollObj  EpollObj;
+
 typedef int (*epoll_addevent)(EpollBase *evb, ConnObj *conn);
 typedef int (*epoll_delevent)(EpollBase *evb, ConnObj *conn);
 typedef int (*epoll_modifyevent)(EpollBase *evb, ConnObj *conn,int events);
 typedef int (*epoll_waitevent)(EpollBase *evb, int timeout);
 typedef int (*event_callback)(ConnObj *conn,int events);
-
-typedef struct tagEpollBase EpollBase;
-typedef struct tagEpollObj  EpollObj;
 
 EpollObj *Epoll_Create_Obj(int events);
 void Epoll_Destory_Obj(EpollObj *epoll_obj);
@@ -45,7 +45,7 @@ int Epoll_Event_Wait(EpollBase *evb, int timeout);
 /*epoll_wait 到来时，回调接口*/
 int Epoll_Event_Callback(ConnObj *conn,int events);
 
-#ifdef __cplusplus{
+#ifdef __cplusplus
 }
 #endif
 

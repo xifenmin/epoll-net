@@ -2,35 +2,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include "connmgr.h"
+#include <unistd.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <linux/tcp.h>
+#include <fcntl.h>
+#include <arpa/inet.h>
 #include "queue.h"
-
-struct tagConnObj {
-	int       fd; /*sockt 对象*/
-	int       type;/*传输类型:tcp、udp*/
-	time_t    last_time;
-	int       activity;/*连接是否正常*/
-	char      ip[32];
-	unsigned char port;
-	SendData  send;
-	ReadData  recv;
-	unsigned char  *recvptr;/*接收数据指针*/
-	unsigned char  *sendptr;/*发送数据指针*/
-	unsigned int   recvlen;/*接收数据长度*/
-	unsigned int   sendlen;/*发送数据长度*/
-	Nodelay        nodelay;
-	Keepalive      keepalive;
-	Noblock        noblock;
-};
+#include "lock.h"
+#include "connmgr.h"
 
 struct tagConntMgr {
-	DataQueue *queue;
 	LockerObj *lockerobj;
+	DataQueue *queue;
 	SetConn   set;
 	GetConn   get;
 };
 
 ConnMgr *ConnMgr_Create(void) {
+
 	ConnMgr *connmgr = NULL;
 
 	connmgr = (ConnMgr *) malloc(sizeof(ConnMgr));
@@ -39,9 +29,11 @@ ConnMgr *ConnMgr_Create(void) {
 
 		connmgr->queue     = DataQueue_Create();
 		connmgr->lockerobj = LockerObj_Create();
-		connmgr->set       = SetConn;
-		connmgr->get       = GetConn;
+		connmgr->set       = setConn;
+		connmgr->get       = getConn;
 	}
+
+	return connmgr;
 }
 
 void ConnMgr_Clear(ConnMgr *connmgr) {
@@ -55,6 +47,7 @@ void ConnMgr_Clear(ConnMgr *connmgr) {
 	int size = DataQueue_Size(connmgr->queue);
 
 	connmgr->lockerobj->Lock(connmgr->lockerobj->locker);
+
 	for (; i < size; i++) {
 		conntobj = DataQueue_Pop(connmgr->queue);
 		if (conntobj != NULL) {
@@ -74,7 +67,7 @@ ConnObj *CreateNewConnObj(void)
 	return connobj;
 }
 
-int SetConn(ConnMgr *connmgr, ConnObj *conntobj) {
+int setConn(ConnMgr *connmgr, ConnObj *conntobj) {
 
 	if (connmgr != NULL) {
 		connmgr->lockerobj->Lock(connmgr->lockerobj->locker);
@@ -87,9 +80,9 @@ int SetConn(ConnMgr *connmgr, ConnObj *conntobj) {
 	return 0;
 }
 
-ConnObj *GetConn(ConnMgr *connmgr) {
+ConnObj *getConn(ConnMgr *connmgr) {
 
-	ConnObj *_conntobj = NULL;
+	ConnObj *_connobj = NULL;
 
 	if (connmgr != NULL) {
 
@@ -98,53 +91,55 @@ ConnObj *GetConn(ConnMgr *connmgr) {
 
 		if (NULL == _connobj){
 
-			_conntobj = CreateNewConnObj();/*建立一个新的连接对象*/
+			_connobj = CreateNewConnObj();/*建立一个新的连接对象*/
 
-			if (NULL != _conntobj) {
+			if (NULL != _connobj) {
 
-				_conntobj->fd        = 0;
-			    _conntobj->type      = TCP;
-				_conntobj->activity  = SOCKET_CONNCLOSED;
-				_conntobj->send      = SendData;
-				_conntobj->sendptr   = NULL;
-				_conntobj->sendlen   = 0;
-				_conntobj->recvptr   = NULL;
-				_conntobj->recvlen   = 0;
-				_conntobj->recv      = ReadData;
-				_conntobj->nodelay   = Nodelay;
-				_conntobj->keepalive = Keepalive;
-				_conntobj->noblock   = Noblock;
+				_connobj->fd        = 0;
+				_connobj->type      = TCP;
+				_connobj->activity  = SOCKET_CONNCLOSED;
+				_connobj->send      = sendData;
+				_connobj->sendptr   = NULL;
+				_connobj->sendlen   = 0;
+				_connobj->recvptr   = NULL;
+				_connobj->recvlen   = 0;
+				_connobj->recv      = readData;
+				_connobj->nodelay   = noDelay;
+				_connobj->keepalive = keepAlive;
+				_connobj->noblock   = noBlock;
 
-				DataQueue_Push(connmgr->queue, _conntobj);
+				DataQueue_Push(connmgr->queue, _connobj);
 		    }
 		}
 
 		connmgr->lockerobj->Unlock(connmgr->lockerobj->locker);
 	}
 
-	return _conntobj;
+	return _connobj;
 }
 
-int SendData(ConnObj *conntobj) {
+int sendData(ConnObj *conntobj) {
 
 	int ret = 0;
-	int send_len = 0;
-
+	int len = 0;
+	int sendlen=0;
 	if (NULL == conntobj) {
 		return -1;
 	}
 
+	len = conntobj->sendlen;
+
 	while (len > 0) {
-		ret = write(conntobj->fd,conntobj->sendptr, conntobj->sendlen);
+		ret = write(conntobj->fd,conntobj->sendptr,len);
 		len -= ret;
-		ptr += ret;
-		send_len += ret;
+		conntobj->sendptr += ret;
+		sendlen += ret;
 	}
 
-	return send_len;
+	return sendlen;
 }
 
-int ReadData(ConnObj *conntobj,unsigned char *ptr,int len)
+int readData(ConnObj *conntobj,unsigned char *ptr,int len)
 {
 	int nLen = 0;
 
@@ -166,20 +161,18 @@ int ReadData(ConnObj *conntobj,unsigned char *ptr,int len)
 	return nLen;
 }
 
-void Nodelay(ConnObj *connobj,int enable=1)
+void noDelay(ConnObj *connobj,int enable)
 {
 	int opt = enable? 1 : 0;
 	setsockopt(connobj->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&opt, sizeof(opt));
 }
 
-void Keepalive(ConnObj *connobj,int enable=1){
+void keepAlive(ConnObj *connobj,int enable){
 	int opt = enable? 1 : 0;
 	setsockopt(connobj->fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&opt, sizeof(opt));
 }
 
-void Noblock(ConnObj *connobj,int enable=1){
-
-	noblock_ = enable;
+void noBlock(ConnObj *connobj,int enable){
 
 	if(enable){
 		fcntl(connobj->fd, F_SETFL, O_NONBLOCK | O_RDWR);

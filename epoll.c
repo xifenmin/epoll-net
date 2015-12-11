@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
 #include "epoll.h"
 
 struct tagEpollBase
@@ -13,7 +17,7 @@ struct tagEpollBase
 
 struct tagEpollObj
 {
-	struct tagEpollBase  epollbase;
+	struct tagEpollBase  *epollbase;
 	epoll_addevent       add;
 	epoll_delevent       del;
 	epoll_modifyevent    modify;
@@ -56,7 +60,7 @@ EpollBase *Init_EpollBase(int events)
 	ephandle     = epoll_create(events);
 
 	if (ephandle < 0) {
-		pritnf("epoll create of size:%d failed! %s",events,strerror(errno));
+		printf("epoll create of size:%d failed! %s",events,strerror(errno));
 		return NULL;
 	}
 
@@ -66,7 +70,7 @@ EpollBase *Init_EpollBase(int events)
     	return NULL;
     }
 
-	evb = (EpollBase *)malloc(EpollBase);
+	evb = (EpollBase *)malloc(sizeof(EpollBase));
 
 	if (evb != NULL){
         evb->epollhandle = ephandle;
@@ -74,7 +78,7 @@ EpollBase *Init_EpollBase(int events)
         evb->event       = event;
 	}
 
-	return ep;
+	return evb;
 }
 
 void Clear_EpollBase(EpollBase *evb)
@@ -92,18 +96,16 @@ void Clear_EpollBase(EpollBase *evb)
 int Epoll_Event_AddConn(EpollBase *evb, ConnObj *conn)
 {
 	int status;
-
 	struct epoll_event event;
 
-	if (evb == NULL) {
-		return -1;
+	if (evb == NULL || conn == NULL) {
+		 return -1;
 	}
 
 	event.events   = (uint32_t) (EPOLLIN | EPOLLOUT | EPOLLET);
 	event.data.ptr = conn;
-	event.data.fd  = conn->fd;
 
-	status = epoll_ctl(evb->epollhandle, EPOLL_CTL_ADD, conn->fd, &event);
+	status = epoll_ctl(evb->epollhandle,EPOLL_CTL_ADD,conn->fd, &event);
 
 	if (status < 0) {
 		printf("epoll ctl on e %d client handle %d failed:%s",evb->epollhandle,conn->fd,strerror(errno));
@@ -134,15 +136,13 @@ int Epoll_Event_ModifyConn(EpollBase *evb, ConnObj *conn,int events /*事件*/)
 {
 	int status = 0;
 
-	struct epoll_event event;
-
     if (evb == NULL){
     	return -1;
     }
 
     if (events & EVENT_READ)
     	events |= EPOLLIN;
-    if (evens & EVENT_WRITE)
+    if (events & EVENT_WRITE)
     	events |= EPOLLOUT;
 
     evb->event->events = events;
@@ -216,7 +216,7 @@ int Epoll_Event_Callback(ConnObj *conn,int events)
 		ret = getsockopt(conn->fd, SOL_SOCKET, SO_ERROR, (void *) &val,&lon);
 
 		if (ret == -1) {
-			printf("connect getsockopt() errno %d, %s, fd %d",errno,strerror(errno),conn->_fd);
+			printf("connect getsockopt() errno %d, %s, fd %d",errno,strerror(errno),conn->fd);
 			return -1;
 		}
 

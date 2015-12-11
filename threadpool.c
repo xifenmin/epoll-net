@@ -21,11 +21,10 @@ typedef struct tagThreadtask {
 	void *arg;
 	char name[125];
 } Threadpool_Task;
-
 //---------------------------------------------------------- 
 static void *Threadpool_Run(void *threadpool_obj) {
-	Threadpool_Task *threadpool_task = NULL;
 
+	Threadpool_Task *threadpool_task = NULL;
 	Threadpool *thread_pool = (Threadpool *) threadpool_obj;
 
 	if (NULL == thread_pool) {
@@ -73,8 +72,8 @@ int Threadpool_Free(Threadpool *thread_pool) {
 	return 0;
 }
 //-----------------------------------------------------------
-int Threadpool_Addtask(Threadpool *thread_pool, void (*callback)(void *),
-		char *name, int namelen, void *arg) {
+int Threadpool_Addtask(Threadpool *thread_pool, callback cb,
+		char *name, void *arg) {
 	Threadpool_Task *threadpool_task = NULL;
 
 	if (NULL == thread_pool || NULL == callback) {
@@ -92,9 +91,9 @@ int Threadpool_Addtask(Threadpool *thread_pool, void (*callback)(void *),
 
 	memset(threadpool_task->name, 0, sizeof(threadpool_task->name));
 
-	threadpool_task->cb = callback;
+	threadpool_task->cb  = cb;
 	threadpool_task->arg = arg;
-	memcpy(threadpool_task->name, name, namelen);
+	memcpy(threadpool_task->name, name, strlen(name));
 
 	Locker_Lock(thread_pool->locker);
 	DataQueue_Push(thread_pool->queue, (void *) threadpool_task);
@@ -134,8 +133,8 @@ int Threadpool_Destroy(Threadpool *thread_pool) {
 }
 //-----------------------------------------------------------
 Threadpool *Threadpool_Create(unsigned int thread_count) {
-	int i = 0;
 
+	int i = 0;
 	Threadpool *thread_pool = NULL;
 
 	thread_pool = (Threadpool *) malloc(sizeof(Threadpool));
@@ -153,7 +152,7 @@ Threadpool *Threadpool_Create(unsigned int thread_count) {
 
 	thread_pool->locker = InitLocker();
 	thread_pool->queue  = DataQueue_Create();
-	thread_pool->thread_count = 0;
+	thread_pool->thread_count = thread_count;
 
 	for (; i < thread_count; ++i) {
 		if (pthread_create(&thread_pool->threadmgr[i], NULL, Threadpool_Run,
