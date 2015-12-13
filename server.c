@@ -13,6 +13,9 @@
 #include "lock.h"
 #include "queue.h"
 #include "threadpool.h"
+#include "connmgr.h"
+#include "connobj.h"
+#include "epollevent.h"
 
 struct tagServerObj
 {
@@ -23,10 +26,10 @@ struct tagServerObj
 	Threadpool *serverthread;//主 server 线程池
 	Threadpool *datathread;//处理接收数据  线程池
 	DataQueue  *dataqueue;/*接收数据队列*/
-	ProcRead    procread;/*客户端回调*/
+	ProcRead   procread;/*客户端回调*/
 };
 
-int StartServer(ServerObj *serverobj,char *ip,unsigned char port,ProcRead procread)
+int StartServer(ServerObj *serverobj,char *ip,unsigned short port,ProcRead procread)
 {
 	int ret = 0;
 	int server_socket = 0;
@@ -41,7 +44,7 @@ int StartServer(ServerObj *serverobj,char *ip,unsigned char port,ProcRead procre
 
 			serverobj->connobj->fd   = server_socket;
 			memcpy(serverobj->connobj->ip,ip,sizeof(serverobj->connobj->ip));
-			serverobj->connobj->port = htons(port);
+			serverobj->connobj->port = port;
 			serverobj->procread      = procread;/*注册调用者接收回调函数*/
 
 	        ret = Server_Listen(serverobj);
@@ -137,7 +140,7 @@ int  Server_Accept(ServerObj *serverobj)
     struct sockaddr_in addr;
 
 	socklen_t addrlen = sizeof(addr);
-	ConnObj *_connobj = NULL;
+	ConnObj  *_connobj = NULL;
 	struct linger opt = {1,0};
 
 	while((client_sock = accept(serverobj->connobj->fd, (struct sockaddr *)&addr, &addrlen)) == -1){
@@ -151,6 +154,7 @@ int  Server_Accept(ServerObj *serverobj)
 	_connobj = serverobj->connmgr->get(serverobj->connmgr);
 
 	if (_connobj != NULL){
+
 		memcpy(_connobj->ip,inet_ntoa(addr.sin_addr),sizeof(_connobj->ip));
 
 		_connobj->port      = ntohs(addr.sin_port);
@@ -167,6 +171,7 @@ int  Server_Accept(ServerObj *serverobj)
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);/*把连接对象，放回到连接池中*/
 			goto sock_err;
 		}
+
 	}else{
 		goto sock_err;
 	}
@@ -174,11 +179,11 @@ int  Server_Accept(ServerObj *serverobj)
 	return 0;
 
 sock_err:
-
 	if (client_sock != 0){
 		close(client_sock);
-		return -1;
+		return 0;
 	}
+    return 0;
 }
 
 void Server_Process(void *argv)

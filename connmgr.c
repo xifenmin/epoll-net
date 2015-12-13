@@ -8,16 +8,8 @@
 #include <linux/tcp.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
-#include "queue.h"
-#include "lock.h"
-#include "connmgr.h"
 
-struct tagConntMgr {
-	LockerObj *lockerobj;
-	DataQueue *queue;
-	SetConn   set;
-	GetConn   get;
-};
+#include "connmgr.h"
 
 ConnMgr *ConnMgr_Create(void) {
 
@@ -36,7 +28,7 @@ ConnMgr *ConnMgr_Create(void) {
 	return connmgr;
 }
 
-void ConnMgr_Clear(ConnMgr *connmgr) {
+void ConnMgr_Clear(struct tagConntMgr *connmgr) {
 	int i = 0;
 	ConnObj *conntobj = NULL;
 
@@ -58,14 +50,8 @@ void ConnMgr_Clear(ConnMgr *connmgr) {
 	free(connmgr);
 }
 
-ConnObj *CreateNewConnObj(void)
-{
-	ConnObj *connobj = NULL;
-	connobj = (ConnObj *)malloc(sizeof(ConnObj));
-	return connobj;
-}
 
-int setConn(ConnMgr *connmgr, ConnObj *conntobj) {
+int setConn(struct tagConntMgr *connmgr, struct tagConnObj *conntobj) {
 
 	if (connmgr != NULL) {
 		connmgr->lockerobj->Lock(connmgr->lockerobj->locker);
@@ -78,7 +64,7 @@ int setConn(ConnMgr *connmgr, ConnObj *conntobj) {
 	return 0;
 }
 
-ConnObj *getConn(ConnMgr *connmgr) {
+struct tagConnObj *getConn(struct tagConntMgr *connmgr) {
 
 	ConnObj *_connobj = NULL;
 
@@ -116,66 +102,3 @@ ConnObj *getConn(ConnMgr *connmgr) {
 	return _connobj;
 }
 
-int sendData(ConnObj *conntobj) {
-
-	int ret = 0;
-	int len = 0;
-	int sendlen=0;
-
-	if (NULL == conntobj) {
-		return -1;
-	}
-
-	len = conntobj->sendlen;
-
-	while (len > 0) {
-		ret = write(conntobj->fd,conntobj->sendptr,len);
-		len -= ret;
-		conntobj->sendptr += ret;
-		sendlen += ret;
-	}
-
-	return sendlen;
-}
-
-int readData(ConnObj *conntobj,unsigned char *ptr,int len)
-{
-	int nLen = 0;
-
-	if (NULL == conntobj){
-		return -1;
-	}
-
-	nLen = read(conntobj->fd,ptr,len);
-
-	if (nLen < 0) {
-		if (errno == EAGAIN || errno == EINTR){
-			//尝试再读一次。
-		}
-	}else if (nLen == 0){
-		printf("connect closed\n");
-		return -1;
-	}
-
-	return nLen;
-}
-
-void noDelay(ConnObj *connobj,int enable)
-{
-	int opt = enable? 1 : 0;
-	setsockopt(connobj->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&opt, sizeof(opt));
-}
-
-void keepAlive(ConnObj *connobj,int enable){
-	int opt = enable? 1 : 0;
-	setsockopt(connobj->fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&opt, sizeof(opt));
-}
-
-void noBlock(ConnObj *connobj,int enable){
-
-	if(enable){
-		fcntl(connobj->fd, F_SETFL, O_NONBLOCK | O_RDWR);
-	}else{
-		fcntl(connobj->fd, F_SETFL, O_RDWR);
-	}
-}

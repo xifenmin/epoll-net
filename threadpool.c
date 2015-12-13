@@ -47,7 +47,7 @@ static void *Threadpool_Run(void *threadpool_obj) {
 		Locker_Unlock(thread_pool->locker);
 		printf("thread func:%s,pid:%ld\n", threadpool_task->name,
 				syscall(SYS_gettid));
-		(*(threadpool_task->func))(threadpool_task->arg);
+		(*(threadpool_task->cb))(threadpool_task->arg);
 	}
 
 	Locker_Unlock(thread_pool->locker);
@@ -76,7 +76,7 @@ int Threadpool_Addtask(Threadpool *thread_pool, callback cb,
 		char *name, void *arg) {
 	Threadpool_Task *threadpool_task = NULL;
 
-	if (NULL == thread_pool || NULL == callback) {
+	if (NULL == thread_pool || NULL == cb) {
 		printf(
 				"threadpool_addtask:thread pool object or callback obj is null !!!\n");
 		return -1;

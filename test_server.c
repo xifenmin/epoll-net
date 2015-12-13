@@ -7,7 +7,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <unistd.h>
+#include "connobj.h"
 #include "server.h"
 
 int readdata(ConnObj *connobj)
@@ -15,6 +16,8 @@ int readdata(ConnObj *connobj)
 	if (NULL != connobj){
 		printf("fd:%d,read len:%d\n",connobj->fd,connobj->recvlen);
 	}
+
+	return 0;
 }
 
 int main(int argc,char **argv)
@@ -26,8 +29,8 @@ int main(int argc,char **argv)
 	if (argc < 2)
        return -1;
 
-	port = atoi(argv[1]);
-	ret  = StartServer(serverobj,argv[0],port,readdata);
+	port = atoi(argv[2]);
+	ret  = StartServer(serverobj,argv[1],port,readdata);
 
 	printf("Start Server:%d\n",ret);
 	for(;;){
