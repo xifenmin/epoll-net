@@ -38,7 +38,6 @@ ConnMgr *ConnMgr_Create(void) {
 
 void ConnMgr_Clear(ConnMgr *connmgr) {
 	int i = 0;
-
 	ConnObj *conntobj = NULL;
 
 	if (connmgr == NULL)
@@ -56,7 +55,6 @@ void ConnMgr_Clear(ConnMgr *connmgr) {
 	}
 
 	connmgr->lockerobj->Unlock(connmgr->lockerobj->locker);
-
 	free(connmgr);
 }
 
@@ -123,6 +121,7 @@ int sendData(ConnObj *conntobj) {
 	int ret = 0;
 	int len = 0;
 	int sendlen=0;
+
 	if (NULL == conntobj) {
 		return -1;
 	}
