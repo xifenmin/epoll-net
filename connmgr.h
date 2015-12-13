@@ -31,7 +31,7 @@ enum ConnectState
 	SOCKET_CONNCLOSED = 2	  // 已关闭状态
 };
 
-typedef struct tagConntMgr      ConnMgr;
+typedef struct tagConntMgr    ConnMgr;
 
 typedef int (*SetConn)(struct tagConntMgr *,struct tagConnObj *);
 typedef struct tagConnObj *(*GetConn)(struct tagConntMgr *);

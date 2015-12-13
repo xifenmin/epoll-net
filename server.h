@@ -10,14 +10,17 @@
 #ifndef _SERVER_H
 #define _SERVER_H
 
+#include "lock.h"
+#include "queue.h"
+#include "threadpool.h"
 #include "connobj.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct tagServerObj   ServerObj;
 
+typedef struct tagServerObj   ServerObj;
 
 ServerObj *Server_Create(int events);
 void Server_Clear(ServerObj *serverobj);

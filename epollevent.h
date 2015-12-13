@@ -24,7 +24,6 @@ typedef int (*epoll_delevent)(struct tagEpollBase *, struct tagConnObj *);
 typedef int (*epoll_modifyevent)(struct tagEpollBase *, struct tagConnObj *,int events);
 typedef int (*epoll_waitevent)(struct tagEpollBase *, int timeout);
 
-
 struct tagEpollObj
 {
 	struct tagEpollBase  *epollbase;

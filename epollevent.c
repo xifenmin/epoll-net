@@ -37,16 +37,15 @@ void Epoll_Destory_Obj(EpollObj *epoll_obj)
 int Epoll_Event_AddConn(struct tagEpollBase *evb, struct tagConnObj  *conn)
 {
 	int status;
-	struct epoll_event event;
 
 	if (evb == NULL || conn == NULL) {
 		 return -1;
 	}
 
-	event.events   = (uint32_t) (EPOLLIN | EPOLLOUT | EPOLLET);
-	event.data.ptr = conn;
+	evb->event->events   = (uint32_t) (EPOLLIN | EPOLLOUT | EPOLLET);
+	evb->event->data.ptr = conn;
 
-	status = epoll_ctl(evb->epollhandle,EPOLL_CTL_ADD,conn->fd, &event);
+	status = epoll_ctl(evb->epollhandle,EPOLL_CTL_ADD,conn->fd,evb->event);
 
 	if (status < 0) {
 		printf("epoll ctl on e %d client handle %d failed:%s",evb->epollhandle,conn->fd,strerror(errno));

@@ -8,13 +8,13 @@
 #include <errno.h>
 #include <arpa/inet.h>
 #include <time.h>
-#include "server.h"
-#include "epoll.h"
+#include <sys/epoll.h>
 #include "lock.h"
 #include "queue.h"
 #include "threadpool.h"
+#include "server.h"
+#include "epoll.h"
 #include "connmgr.h"
-#include "connobj.h"
 #include "epollevent.h"
 
 struct tagServerObj
@@ -26,7 +26,7 @@ struct tagServerObj
 	Threadpool *serverthread;//主 server 线程池
 	Threadpool *datathread;//处理接收数据  线程池
 	DataQueue  *dataqueue;/*接收数据队列*/
-	ProcRead   procread;/*客户端回调*/
+	ProcRead    procread;/*客户端回调*/
 };
 
 int StartServer(ServerObj *serverobj,char *ip,unsigned short port,ProcRead procread)
@@ -139,9 +139,9 @@ int  Server_Accept(ServerObj *serverobj)
 	int client_sock;
     struct sockaddr_in addr;
 
-	socklen_t addrlen = sizeof(addr);
+	socklen_t addrlen  = sizeof(addr);
 	ConnObj  *_connobj = NULL;
-	struct linger opt = {1,0};
+	struct linger opt  = {1,0};
 
 	while((client_sock = accept(serverobj->connobj->fd, (struct sockaddr *)&addr, &addrlen)) == -1){
 		if(errno != EINTR){
@@ -208,15 +208,18 @@ void Server_Loop(void *argv)
 {
 	int datalen = 0;
 
-	ConnObj *_connobj    = NULL;
+	ConnObj *_connobj = NULL;
 	ServerObj *serverobj = (ServerObj *)argv;
 
 	if (NULL != serverobj){
 
 		for(;;){
+
 			datalen = serverobj->epollobj->wait(serverobj->epollobj->epollbase,0);
+
 			if (datalen >0){
-				_connobj = (ConnObj *)serverobj->epollobj->epollbase->event->data.ptr;
+				_connobj =	(ConnObj *)serverobj->epollobj->epollbase->event->data.ptr;
+
 				if (NULL != _connobj){
 					DataQueue_Push(serverobj->dataqueue,_connobj);
 				}
