@@ -51,7 +51,7 @@ void Clear_EpollBase(EpollBase *evb)
         evb = NULL;
 	}
 }
-int Epoll_Event_Callback(struct tagConnObj  *conn,int events)
+int Epoll_Event_Callback(struct tagServerObj  *serverobj,int events)
  {
 	int val = 0;
 	errno   = 0;
@@ -62,11 +62,12 @@ int Epoll_Event_Callback(struct tagConnObj  *conn,int events)
 	int  recvlen = 0;
 	int  datalen = 0;
 
-	if (NULL == conn) {
+	if (NULL == serverobj) {
 		return -1;
 	}
 
-	if (conn->activity == SOCKET_CONNECTING) { /*正在连接*/
+	Server_Accept(serverobj);
+
 
 		ret = getsockopt(conn->fd, SOL_SOCKET, SO_ERROR, (void *) &val,&lon);
 
@@ -84,7 +85,6 @@ int Epoll_Event_Callback(struct tagConnObj  *conn,int events)
 		if (val != 0 ){
 			close(conn->fd);
 		}
-	}
 
 	if (EPOLLIN & events){ /*检测到读事件*/
 
@@ -98,7 +98,7 @@ int Epoll_Event_Callback(struct tagConnObj  *conn,int events)
 			datalen += recvlen;
 		}
 
-		memcpy(conn->recvptr,recvbuffer,recvlen);
+		//memcpy(conn->recvptr,recvbuffer,recvlen);
 		conn->recvlen = datalen;
 	}
 

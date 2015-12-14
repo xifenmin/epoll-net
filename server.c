@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <arpa/inet.h>
 #include <time.h>
 #include <sys/epoll.h>
@@ -19,20 +21,19 @@
 
 struct tagServerObj
 {
-	EpollObj   *epollobj;
-	ConnMgr    *connmgr;/*server 端连接池，管理客户端连接*/
-	ConnObj    *connobj;/*server 端连接描述符*/
-	LockerObj  *lockerobj;
-	Threadpool *serverthread;//主 server 线程池
-	Threadpool *datathread;//处理接收数据  线程池
-	DataQueue  *dataqueue;/*接收数据队列*/
-	ProcRead    procread;/*客户端回调*/
+	EpollObj    *epollobj;
+	ConnMgr     *connmgr;/*server 端连接池，管理客户端连接*/
+	ConnObj     *connobj;/*server 端连接描述符*/
+	LockerObj   *lockerobj;
+	Threadpool  *serverthread;//主 server 线程池
+	Threadpool  *datathread;//处理接收数据  线程池
+	DataQueue   *dataqueue;/*接收数据队列*/
+	ProcRead     procread;/*客户端回调*/
 };
 
 int StartServer(ServerObj *serverobj,char *ip,unsigned short port,ProcRead procread)
 {
-	int ret = 0;
-	int server_socket = 0;
+	int ret  = 0;
 
 	if (serverobj == NULL){
 
@@ -40,9 +41,6 @@ int StartServer(ServerObj *serverobj,char *ip,unsigned short port,ProcRead procr
 
 		if (NULL != serverobj){
 
-			server_socket = socket(AF_INET,SOCK_STREAM,0);
-
-			serverobj->connobj->fd   = server_socket;
 			memcpy(serverobj->connobj->ip,ip,sizeof(serverobj->connobj->ip));
 			serverobj->connobj->port = port;
 			serverobj->procread      = procread;/*注册调用者接收回调函数*/
@@ -95,10 +93,10 @@ void Server_Clear(ServerObj *serverobj)
 
 int Server_Listen(ServerObj *serverobj)
  {
-	struct sockaddr_in addr;
-
 	int sock = -1;
 	int opt  = 1;
+
+	struct sockaddr_in addr;
 
 	if (NULL == serverobj) {
 		return -1;
@@ -106,22 +104,32 @@ int Server_Listen(ServerObj *serverobj)
 
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_port   = htons((short)serverobj->connobj->port);
-
-	inet_pton(AF_INET,serverobj->connobj->ip, (void *)&addr.sin_addr);
+	addr.sin_port   = htons((unsigned short)serverobj->connobj->port);
+	addr.sin_addr.s_addr = inet_addr(serverobj->connobj->ip);
 
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		goto sock_err;
 	}
+
+	serverobj->connobj->fd = sock;
+
+	serverobj->connobj->noblock(serverobj->connobj,1);
+	serverobj->connobj->keepalive(serverobj->connobj,1);
+
 	if (setsockopt(serverobj->connobj->fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
 		goto sock_err;
 	}
+
 	if (bind(serverobj->connobj->fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+		printf("bind socket fail!socket:%d,error:%s\n",serverobj->connobj->fd,strerror(errno));
 		goto sock_err;
 	}
+
 	if (listen(serverobj->connobj->fd, 1024) == -1) {
 		goto sock_err;
 	}
+
+	serverobj->epollobj->add(serverobj->epollobj->epollbase,serverobj->connobj);
 
 	return 0;
 
@@ -206,24 +214,25 @@ void Server_Process(void *argv)
 
 void Server_Loop(void *argv)
 {
-	int datalen = 0;
+	//int datalen = 0;
 
-	ConnObj *_connobj = NULL;
+	//ConnObj *_connobj = NULL;
 	ServerObj *serverobj = (ServerObj *)argv;
 
 	if (NULL != serverobj){
 
 		for(;;){
 
-			datalen = serverobj->epollobj->wait(serverobj->epollobj->epollbase,0);
-
+			serverobj->epollobj->wait(serverobj->epollobj->epollbase,serverobj->dataqueue,0);
+			/*
 			if (datalen >0){
 				_connobj =	(ConnObj *)serverobj->epollobj->epollbase->event->data.ptr;
 
 				if (NULL != _connobj){
-					DataQueue_Push(serverobj->dataqueue,_connobj);
+
 				}
 			}
+			*/
 		}
 	}
 }

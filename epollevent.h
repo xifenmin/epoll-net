@@ -12,6 +12,7 @@
 
 #include "epoll.h"
 #include "connobj.h"
+#include "queue.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,7 +23,7 @@ typedef struct tagEpollObj  EpollObj;
 typedef int (*epoll_addevent)(struct tagEpollBase *, struct tagConnObj *);
 typedef int (*epoll_delevent)(struct tagEpollBase *, struct tagConnObj *);
 typedef int (*epoll_modifyevent)(struct tagEpollBase *, struct tagConnObj *,int events);
-typedef int (*epoll_waitevent)(struct tagEpollBase *, int timeout);
+typedef int (*epoll_waitevent)(struct tagEpollBase *,struct tagDataQueue *,int timeout);
 
 struct tagEpollObj
 {
@@ -43,7 +44,7 @@ int Epoll_Event_DelConn(struct tagEpollBase *evb, struct tagConnObj  *conn);
 /*epoll 修改事件*/
 int Epoll_Event_ModifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events /*事件*/);
 /*epoll wait*/
-int Epoll_Event_Wait(struct tagEpollBase *evb, int timeout);
+int Epoll_Event_Wait(struct tagEpollBase *evb,struct tagDataQueue *queue,int timeout);
 
 
 #ifdef __cplusplus

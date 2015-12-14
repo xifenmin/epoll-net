@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/epoll.h>
-#include <errno.h>
-#include <unistd.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <arpa/inet.h>
+#include <sys/epoll.h>
+#include "queue.h"
 #include "epollevent.h"
 
 EpollObj *Epoll_Create_Obj(int events)
@@ -15,6 +19,7 @@ EpollObj *Epoll_Create_Obj(int events)
 	epoll_obj = (EpollObj *)malloc(sizeof(EpollObj));
 
 	if (NULL != epoll_obj){
+
 		epoll_obj->epollbase = Init_EpollBase(events);
 		epoll_obj->add       = Epoll_Event_AddConn;
 		epoll_obj->del       = Epoll_Event_DelConn;
@@ -98,14 +103,17 @@ int Epoll_Event_ModifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,in
 
 }
 
-int Epoll_Event_Wait(struct tagEpollBase *evb, int timeout)
+int Epoll_Event_Wait(struct tagEpollBase *evb,struct tagDataQueue *queue,int timeout)
  {
 	int i = 0;
 	int events = 0;
+	int len    = 0;
+
+	ConnObj *_connobj = NULL;
 
 	struct epoll_event *ev = NULL;
 
-	if (evb == NULL) {
+	if (evb == NULL || NULL == queue) {
 		return -1;
 	}
 
@@ -128,7 +136,14 @@ int Epoll_Event_Wait(struct tagEpollBase *evb, int timeout)
 		}
 
 		if (evb->cb != NULL) {
-			evb->cb(ev->data.ptr, events);
+
+			_connobj = ev->data.ptr;
+
+			len = evb->cb(_connobj, events);
+
+			if (len >0){
+				DataQueue_Push(queue,_connobj);
+			}
 		}
 	}
 

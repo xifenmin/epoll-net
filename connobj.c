@@ -39,9 +39,9 @@ ConnObj *CreateNewConnObj(void)
 
 int sendData(ConnObj *conntobj) {
 
-	int ret = 0;
-	int len = 0;
-	int sendlen=0;
+	int ret     = 0;
+	int len     = 0;
+	int sendlen = 0;
 
 	if (NULL == conntobj) {
 		return -1;
