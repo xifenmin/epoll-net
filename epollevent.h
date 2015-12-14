@@ -13,17 +13,16 @@
 #include "epoll.h"
 #include "connobj.h"
 #include "queue.h"
+#include "server.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct tagEpollObj  EpollObj;
-
 typedef int (*epoll_addevent)(struct tagEpollBase *, struct tagConnObj *);
 typedef int (*epoll_delevent)(struct tagEpollBase *, struct tagConnObj *);
 typedef int (*epoll_modifyevent)(struct tagEpollBase *, struct tagConnObj *,int events);
-typedef int (*epoll_waitevent)(struct tagEpollBase *,struct tagDataQueue *,int timeout);
+typedef int (*epoll_waitevent)(struct tagEpollBase *,void  *,int timeout);
 
 struct tagEpollObj
 {
@@ -33,6 +32,7 @@ struct tagEpollObj
 	epoll_modifyevent    modify;
 	epoll_waitevent      wait;
 };
+typedef struct tagEpollObj  EpollObj;
 
 EpollObj *Epoll_Create_Obj(int events);
 void Epoll_Destory_Obj(EpollObj *epoll_obj);
@@ -44,7 +44,7 @@ int Epoll_Event_DelConn(struct tagEpollBase *evb, struct tagConnObj  *conn);
 /*epoll 修改事件*/
 int Epoll_Event_ModifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events /*事件*/);
 /*epoll wait*/
-int Epoll_Event_Wait(struct tagEpollBase *evb,struct tagDataQueue *queue,int timeout);
+int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout);
 
 
 #ifdef __cplusplus

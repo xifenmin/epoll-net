@@ -11,44 +11,29 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include <sys/epoll.h>
-#include "lock.h"
-#include "queue.h"
-#include "threadpool.h"
+#include "connobj.h"
 #include "server.h"
-#include "epoll.h"
-#include "connmgr.h"
-#include "epollevent.h"
-
-struct tagServerObj
-{
-	EpollObj    *epollobj;
-	ConnMgr     *connmgr;/*server 端连接池，管理客户端连接*/
-	ConnObj     *connobj;/*server 端连接描述符*/
-	LockerObj   *lockerobj;
-	Threadpool  *serverthread;//主 server 线程池
-	Threadpool  *datathread;//处理接收数据  线程池
-	DataQueue   *dataqueue;/*接收数据队列*/
-	ProcRead     procread;/*客户端回调*/
-};
 
 int StartServer(ServerObj *serverobj,char *ip,unsigned short port,ProcRead procread)
-{
-	int ret  = 0;
+ {
+	int ret = 0;
 
-	if (serverobj == NULL){
+	if (serverobj == NULL) {
 
 		serverobj = Server_Create(1024);
 
-		if (NULL != serverobj){
+		if (NULL != serverobj) {
 
-			memcpy(serverobj->connobj->ip,ip,sizeof(serverobj->connobj->ip));
+			memcpy(serverobj->connobj->ip, ip, sizeof(serverobj->connobj->ip));
 			serverobj->connobj->port = port;
-			serverobj->procread      = procread;/*注册调用者接收回调函数*/
+			serverobj->procread = procread;/*注册调用者接收回调函数*/
 
-	        ret = Server_Listen(serverobj);
+			ret = Server_Listen(serverobj);
 
-	        Threadpool_Addtask(serverobj->serverthread,&Server_Loop,"Server_Loop",serverobj);
-	        Threadpool_Addtask(serverobj->datathread,&Server_Loop,"Server_Process",serverobj);
+			Threadpool_Addtask(serverobj->serverthread, &Server_Loop,
+					"Server_Loop", serverobj);
+			Threadpool_Addtask(serverobj->datathread, &Server_Process,
+					"Server_Process", serverobj);
 
 		}
 	}
@@ -142,7 +127,7 @@ sock_err:
 	return -1;
 }
 
-int  Server_Accept(ServerObj *serverobj)
+ConnObj  *Server_Accept(ServerObj *serverobj)
 {
 	int client_sock;
     struct sockaddr_in addr;
@@ -153,7 +138,7 @@ int  Server_Accept(ServerObj *serverobj)
 
 	while((client_sock = accept(serverobj->connobj->fd, (struct sockaddr *)&addr, &addrlen)) == -1){
 		if(errno != EINTR){
-			return -1;
+			return NULL;
 		}
 	}
 
@@ -174,7 +159,7 @@ int  Server_Accept(ServerObj *serverobj)
 		_connobj->nodelay(_connobj,1);
 		_connobj->noblock(_connobj,1);
 
-		if (!serverobj->epollobj->add(serverobj->epollobj->epollbase,_connobj)){/*设置客户端socket epoll事件*/
+		if (serverobj->epollobj->add(serverobj->epollobj->epollbase,_connobj) !=0 ){/*设置客户端socket epoll事件*/
            /*add fail*/
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);/*把连接对象，放回到连接池中*/
 			goto sock_err;
@@ -184,30 +169,33 @@ int  Server_Accept(ServerObj *serverobj)
 		goto sock_err;
 	}
 
-	return 0;
+	return _connobj;
 
 sock_err:
 	if (client_sock != 0){
 		close(client_sock);
-		return 0;
+		return NULL;
 	}
-    return 0;
+    return NULL;
 }
 
 void Server_Process(void *argv)
-{
-	ConnObj *_connobj    = NULL;
-	ServerObj *serverobj = (ServerObj *)argv;
+ {
+	ConnObj *_connobj = NULL;
+	ServerObj *serverobj = (ServerObj *) argv;
 
-	for(;;){
+	for (;;) {
+		if (NULL != serverobj) {
 
-		if (NULL != serverobj){
-		   _connobj = DataQueue_Pop(serverobj->dataqueue);
+			if (DataQueue_Size(serverobj->dataqueue) > 0) {
+				_connobj = DataQueue_Pop(serverobj->dataqueue);
 
-		   if (NULL != _connobj){
-                //回调用户接口函数
-			   serverobj->procread(_connobj);
-		   }
+				if (NULL != _connobj) {
+					//回调用户接口函数
+					printf("OK\n");
+					serverobj->procread(_connobj);
+				}
+			}
 		}
 	}
 }
@@ -223,7 +211,7 @@ void Server_Loop(void *argv)
 
 		for(;;){
 
-			serverobj->epollobj->wait(serverobj->epollobj->epollbase,serverobj->dataqueue,0);
+			serverobj->epollobj->wait(serverobj->epollobj->epollbase,serverobj,1);
 			/*
 			if (datalen >0){
 				_connobj =	(ConnObj *)serverobj->epollobj->epollbase->event->data.ptr;

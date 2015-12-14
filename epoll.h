@@ -9,8 +9,6 @@
 #ifndef _EPOLL_H
 #define _EPOLL_H
 
-#include "server.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,7 +18,7 @@ extern "C" {
 #define  EVENT_WRITE      0x00ff00
 #define  EVENT_ERR        0xff0000
 
-typedef int (*event_callback)(struct tagServerObj *,int events);
+typedef int (*event_callback)(void *,int events);
 
 struct tagEpollBase
 {
@@ -35,7 +33,7 @@ typedef struct tagEpollBase EpollBase;
 EpollBase *Init_EpollBase(int events);
 void  Clear_EpollBase(EpollBase *evb);
 /*epoll_wait 到来时，回调接口*/
-int Epoll_Event_Callback(struct tagServerObj  *serverobj,int events);
+int Epoll_Event_Callback(void *_serverobj,int events);
 
 #ifdef __cplusplus
 }
