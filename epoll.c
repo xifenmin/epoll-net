@@ -52,16 +52,25 @@ void Clear_EpollBase(EpollBase *evb)
         evb = NULL;
 	}
 }
+<<<<<<< HEAD
 
 int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 {
 
+=======
+int Epoll_Event_Callback(void *_serverobj,int events)
+ {
+>>>>>>> 702421417591de1909740aa30d3354c96fbefefc
 	int val = 0;
 	errno = 0;
 	socklen_t lon = sizeof(int);
 	int ret = 0;
 
+<<<<<<< HEAD
 	ConnObj *_connobj = (ConnObj *)connobj;
+=======
+	ConnObj *_connobj = NULL;
+>>>>>>> 702421417591de1909740aa30d3354c96fbefefc
 
 	ServerObj *serverobj = (ServerObj *)_serverobj;
 
@@ -74,8 +83,12 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 		return -1;
 	}
 
+<<<<<<< HEAD
 	if (serverobj->connobj == _connobj)
 		_connobj = Server_Accept(serverobj);
+=======
+	_connobj = Server_Accept(serverobj);
+>>>>>>> 702421417591de1909740aa30d3354c96fbefefc
 
 	if (_connobj == NULL)
 		return -1;
@@ -99,8 +112,13 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 	}
 
 	if (EPOLLIN & events) { /*检测到读事件*/
+<<<<<<< HEAD
 		recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
 
+=======
+
+		recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
+>>>>>>> 702421417591de1909740aa30d3354c96fbefefc
 		if (recvlen < 0) {
 			recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
 			if (recvlen > 0) {

@@ -23,11 +23,16 @@ int StartServer(ServerObj *serverobj,char *ip,unsigned short port,ProcRead procr
 		serverobj = Server_Create(1024);
 
 		if (NULL != serverobj) {
+<<<<<<< HEAD
 
 			memcpy(serverobj->connobj->ip, ip, sizeof(serverobj->connobj->ip));
 
+=======
+
+			memcpy(serverobj->connobj->ip, ip, sizeof(serverobj->connobj->ip));
+>>>>>>> 702421417591de1909740aa30d3354c96fbefefc
 			serverobj->connobj->port = port;
-			serverobj->procread      = procread;/*注册调用者接收回调函数*/
+			serverobj->procread = procread;/*注册调用者接收回调函数*/
 
 			ret = Server_Listen(serverobj);
 
@@ -181,17 +186,31 @@ sock_err:
 }
 
 void Server_Process(void *argv)
+<<<<<<< HEAD
 {
 	ConnObj *_connobj = NULL;
 	ServerObj *serverobj = (ServerObj *) argv;
 
 	for (;;) {
 		if (NULL != serverobj) {
+=======
+ {
+	ConnObj *_connobj = NULL;
+	ServerObj *serverobj = (ServerObj *) argv;
+
+	for (;;) {
+		if (NULL != serverobj) {
+
+>>>>>>> 702421417591de1909740aa30d3354c96fbefefc
 			if (DataQueue_Size(serverobj->dataqueue) > 0) {
 				_connobj = DataQueue_Pop(serverobj->dataqueue);
 
 				if (NULL != _connobj) {
 					//回调用户接口函数
+<<<<<<< HEAD
+=======
+					printf("OK\n");
+>>>>>>> 702421417591de1909740aa30d3354c96fbefefc
 					serverobj->procread(_connobj);
 				}
 			}
@@ -207,7 +226,21 @@ void Server_Loop(void *argv)
 	if (NULL != serverobj){
 
 		for(;;){
+<<<<<<< HEAD
 			serverobj->epollobj->wait(serverobj->epollobj->epollbase,serverobj,1);
+=======
+
+			serverobj->epollobj->wait(serverobj->epollobj->epollbase,serverobj,1);
+			/*
+			if (datalen >0){
+				_connobj =	(ConnObj *)serverobj->epollobj->epollbase->event->data.ptr;
+
+				if (NULL != _connobj){
+
+				}
+			}
+			*/
+>>>>>>> 702421417591de1909740aa30d3354c96fbefefc
 		}
 	}
 }
