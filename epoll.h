@@ -18,11 +18,7 @@ extern "C" {
 #define  EVENT_WRITE      0x00ff00
 #define  EVENT_ERR        0xff0000
 
-<<<<<<< HEAD
 typedef int (*event_callback)(void *,void *,int events);
-=======
-typedef int (*event_callback)(void *,int events);
->>>>>>> 702421417591de1909740aa30d3354c96fbefefc
 
 struct tagEpollBase
 {
@@ -37,11 +33,7 @@ typedef struct tagEpollBase EpollBase;
 EpollBase *Init_EpollBase(int events);
 void  Clear_EpollBase(EpollBase *evb);
 /*epoll_wait 到来时，回调接口*/
-<<<<<<< HEAD
 int Epoll_Event_Callback(void *_serverobj,void *_conobj,int events);
-=======
-int Epoll_Event_Callback(void *_serverobj,int events);
->>>>>>> 702421417591de1909740aa30d3354c96fbefefc
 
 #ifdef __cplusplus
 }
