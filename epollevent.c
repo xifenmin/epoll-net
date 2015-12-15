@@ -11,6 +11,7 @@
 #include <sys/epoll.h>
 #include "queue.h"
 #include "epollevent.h"
+#include "server.h"
 
 EpollObj *Epoll_Create_Obj(int events)
 {
@@ -103,17 +104,18 @@ int Epoll_Event_ModifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,in
 
 }
 
-int Epoll_Event_Wait(struct tagEpollBase *evb,struct tagDataQueue *queue,int timeout)
+int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
  {
 	int i = 0;
 	int events = 0;
 	int len    = 0;
 
 	ConnObj *_connobj = NULL;
+	ServerObj *serverobj = (ServerObj *)_serverobj;
 
 	struct epoll_event *ev = NULL;
 
-	if (evb == NULL || NULL == queue) {
+	if (evb == NULL || NULL == serverobj) {
 		return -1;
 	}
 
@@ -139,10 +141,11 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,struct tagDataQueue *queue,int tim
 
 			_connobj = ev->data.ptr;
 
-			len = evb->cb(_connobj, events);
+			len = evb->cb(serverobj,_connobj,events);
 
 			if (len >0){
-				DataQueue_Push(queue,_connobj);
+				printf("push recv:%d\n",len);
+				DataQueue_Push(serverobj->dataqueue,_connobj);
 			}
 		}
 	}

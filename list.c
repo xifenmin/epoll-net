@@ -28,6 +28,7 @@ DataList *DataList_Create(void) {
 }
 //--------------------------------------------------------------------------------------------------------
 DataNode *DataNode_Create(void *data) {
+
 	DataNode *node;
 
 	node = (DataNode *) malloc(sizeof(DataNode));
