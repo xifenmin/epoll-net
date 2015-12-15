@@ -144,7 +144,6 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 			len = evb->cb(serverobj,_connobj,events);
 
 			if (len >0){
-				printf("push recv:%d\n",len);
 				DataQueue_Push(serverobj->dataqueue,_connobj);
 			}
 		}

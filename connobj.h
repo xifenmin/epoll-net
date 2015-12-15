@@ -51,7 +51,6 @@ void noDelay(ConnObj *connobj,int enable);
 void keepAlive(ConnObj *connobj,int enable);
 void noBlock(ConnObj *connobj,int enable);
 
-
 #ifdef __cplusplus
 }
 #endif

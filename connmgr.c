@@ -91,8 +91,6 @@ struct tagConnObj *getConn(struct tagConntMgr *connmgr) {
 				_connobj->nodelay   = noDelay;
 				_connobj->keepalive = keepAlive;
 				_connobj->noblock   = noBlock;
-
-				DataQueue_Push(connmgr->queue, _connobj);
 		    }
 		}
 
