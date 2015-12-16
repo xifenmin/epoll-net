@@ -166,6 +166,8 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 			goto sock_err;
 		}
 
+		printf("create net connect:addr;%p,fd:%d\n",_connobj,_connobj->fd);
+
 	}else{
 		goto sock_err;
 	}
@@ -186,6 +188,8 @@ void Server_Process(void *argv)
 	ServerObj *serverobj = (ServerObj *) argv;
 
 	for (;;) {
+		Locker_Semwait(serverobj->lockerobj->locker);
+		Locker_Lock(serverobj->lockerobj->locker);
 		if (NULL != serverobj) {
 			if (DataQueue_Size(serverobj->dataqueue) > 0) {
 				_connobj = DataQueue_Pop(serverobj->dataqueue);
@@ -196,7 +200,7 @@ void Server_Process(void *argv)
 				}
 			}
 		}
-		sleep(1);
+		Locker_Unlock(serverobj->lockerobj->locker);
 	}
 }
 

@@ -70,6 +70,8 @@ struct tagConnObj *getConn(struct tagConntMgr *connmgr) {
 
 	if (connmgr != NULL) {
 
+
+
 		connmgr->lockerobj->Lock(connmgr->lockerobj->locker);
 		_connobj = DataQueue_Pop(connmgr->queue);
 

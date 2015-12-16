@@ -99,17 +99,24 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 	}
 
 	if (EPOLLIN & events) { /*检测到读事件*/
+
+		//printf("check event fd:%d\n",_connobj->fd);
 		recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
+
+		if (recvlen == 0){
+			printf("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
+			serverobj->connmgr->set(serverobj->connmgr,_connobj);
+			return 0;
+		}
 
 		if (recvlen < 0) {
 			recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
 			if (recvlen > 0) {
 				datalen += recvlen;
 			}
-		} else {
-			datalen += recvlen;
 		}
 
+		datalen = recvlen;
 		//memcpy(conn->recvptr,recvbuffer,recvlen);
 		_connobj->recvlen = datalen;
 	}

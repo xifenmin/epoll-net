@@ -144,7 +144,10 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 			len = evb->cb(serverobj,_connobj,events);
 
 			if (len >0){
+				Locker_Lock(serverobj->lockerobj->locker);
 				DataQueue_Push(serverobj->dataqueue,_connobj);
+				Locker_Unlock(serverobj->lockerobj->locker);
+				Locker_Post(serverobj->lockerobj->locker);
 			}
 		}
 	}
