@@ -23,6 +23,7 @@ ConnMgr *ConnMgr_Create(void) {
 		connmgr->lockerobj = LockerObj_Create();
 		connmgr->set       = setConn;
 		connmgr->get       = getConn;
+		connmgr->reset     = connobjReset;
 	}
 
 	return connmgr;
@@ -50,12 +51,33 @@ void ConnMgr_Clear(struct tagConntMgr *connmgr) {
 	free(connmgr);
 }
 
+void  connobjReset(ConnObj *connobj)
+{
+   if (NULL != connobj){
+
+		connobj->type      = TCP;
+		connobj->activity  = SOCKET_CONNCLOSED;
+		connobj->send      = sendData;
+		connobj->sendptr   = NULL; //还没处理内存释放
+		connobj->sendlen   = 0;
+		connobj->recvptr   = NULL;//还没处理内存释放
+		connobj->recvlen   = 0;
+		connobj->recv      = readData;
+		connobj->nodelay   = noDelay;
+		connobj->keepalive = keepAlive;
+		connobj->noblock   = noBlock;
+
+		memset(connobj->ip,0,sizeof(connobj->ip));
+		connobj->port      = 0;
+   }
+}
 
 int setConn(struct tagConntMgr *connmgr, struct tagConnObj *conntobj) {
 
 	if (connmgr != NULL) {
 		connmgr->lockerobj->Lock(connmgr->lockerobj->locker);
 		if (NULL != conntobj) {
+			connobjReset(conntobj);
 			DataQueue_Push(connmgr->queue, conntobj);
 		}
 		connmgr->lockerobj->Unlock(connmgr->lockerobj->locker);
@@ -70,30 +92,13 @@ struct tagConnObj *getConn(struct tagConntMgr *connmgr) {
 
 	if (connmgr != NULL) {
 
-
-
 		connmgr->lockerobj->Lock(connmgr->lockerobj->locker);
 		_connobj = DataQueue_Pop(connmgr->queue);
 
 		if (NULL == _connobj){
 
 			_connobj = CreateNewConnObj();/*建立一个新的连接对象*/
-
-			if (NULL != _connobj) {
-
-				_connobj->fd        = 0;
-				_connobj->type      = TCP;
-				_connobj->activity  = SOCKET_CONNCLOSED;
-				_connobj->send      = sendData;
-				_connobj->sendptr   = NULL;
-				_connobj->sendlen   = 0;
-				_connobj->recvptr   = NULL;
-				_connobj->recvlen   = 0;
-				_connobj->recv      = readData;
-				_connobj->nodelay   = noDelay;
-				_connobj->keepalive = keepAlive;
-				_connobj->noblock   = noBlock;
-		    }
+			connobjReset(_connobj);
 		}
 
 		connmgr->lockerobj->Unlock(connmgr->lockerobj->locker);

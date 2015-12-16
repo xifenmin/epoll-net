@@ -16,24 +16,6 @@ ConnObj *CreateNewConnObj(void)
 	ConnObj *connobj = NULL;
 	connobj = (ConnObj *)malloc(sizeof(ConnObj));
 
-	if (NULL != connobj)
-	{
-		connobj->type      = TCP;
-		connobj->activity  = SOCKET_CONNCLOSED;
-		connobj->send      = sendData;
-		connobj->sendptr   = NULL;
-		connobj->sendlen   = 0;
-		connobj->recvptr   = NULL;
-		connobj->recvlen   = 0;
-		connobj->recv      = readData;
-		connobj->nodelay   = noDelay;
-		connobj->keepalive = keepAlive;
-		connobj->noblock   = noBlock;
-
-		memset(connobj->ip,0,sizeof(connobj->ip));
-		connobj->port      = 0;
-	}
-
 	return connobj;
 }
 

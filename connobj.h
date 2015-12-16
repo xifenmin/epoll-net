@@ -23,6 +23,7 @@ typedef int  (*ReadData)(struct tagConnObj *,unsigned char *ptr,int len);/*接�
 typedef void (*Nodelay)(struct tagConnObj *,int enable);
 typedef int  (*ProcRead)(struct tagConnObj *);
 
+
 struct tagConnObj {
 	int       fd; /*sockt 对象*/
 	int       type;/*传输类型:tcp、udp*/
@@ -42,6 +43,7 @@ struct tagConnObj {
 };
 
 ConnObj *CreateNewConnObj(void);
+
 /*发送数据*/
 int sendData(ConnObj *conntobj);
 /*接收数据*/

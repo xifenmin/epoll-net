@@ -32,25 +32,27 @@ enum ConnectState
 };
 
 typedef struct tagConntMgr    ConnMgr;
-
 typedef int (*SetConn)(struct tagConntMgr *,struct tagConnObj *);
 typedef struct tagConnObj *(*GetConn)(struct tagConntMgr *);
+typedef void (*Reset)(struct tagConnObj *);
 
 struct tagConntMgr {
 	LockerObj *lockerobj;
 	DataQueue *queue;
-	SetConn   set;
-	GetConn   get;
+	SetConn    set;
+	GetConn    get;
+	Reset      reset;
 };
 
 /*建立连接池*/
 ConnMgr *ConnMgr_Create(void);
 void ConnMgr_Clear(struct tagConntMgr *connmgr);
+/*连接Reset*/
+void   connobjReset(ConnObj *connobj);
 /*push 一个新连接push到连接池中*/
 int setConn(struct tagConntMgr *connmgr,struct tagConnObj *conntobj);
 /*pop 从连接对象池中pop一个对象出来*/
 ConnObj *getConn(struct tagConntMgr *connmgr);
-
 
 #ifdef __cplusplus
 }
