@@ -57,6 +57,8 @@ ServerObj *Server_Create(int events)
 		serverobj->dataqueue    = DataQueue_Create();
 		serverobj->serverthread = Threadpool_Create(1);/*Proactor 模式，单线程*/
 		serverobj->datathread   = Threadpool_Create(5);/*数据线程池，处理接收数据用的*/
+
+		serverobj->connmgr->reset(serverobj->connobj);/*初始化socket连接对象*/
 	}
 
 	return serverobj;

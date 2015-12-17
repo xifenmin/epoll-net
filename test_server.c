@@ -10,13 +10,17 @@
 #include <unistd.h>
 #include "connobj.h"
 #include "server.h"
+#include "log.h"
+
+#define  FILE_NAME "/home/xfm/xfm/net/test_server.log"
+
+static  Logger  *logger = NULL;
 
 int readdata(ConnObj *connobj)
 {
 	if (NULL != connobj){
-		printf("fd:%d,read len:%d\n",connobj->fd,connobj->recvlen);
+		log_info(logger,"fd:%d,read len:%d",connobj->fd,connobj->recvlen);
 	}
-
 	return 0;
 }
 
@@ -31,6 +35,8 @@ int main(int argc,char **argv)
 
 	port = atoi(argv[2]);
 	ret  = StartServer(serverobj,argv[1],port,readdata);
+
+	logger = Logger_Create(LEVEL_INFO,10,FILE_NAME);
 
 	printf("Start Server:%d\n",ret);
 	for(;;){
