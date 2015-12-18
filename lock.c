@@ -106,9 +106,7 @@ int Locker_Condwait(Locker *locker)
     }
 
     int ret = 0;
-    Locker_Lock(locker);
     ret = pthread_cond_wait(&locker->m_cond,&locker->m_mutex );
-    Locker_Unlock(locker);
 
     return ret;
 }

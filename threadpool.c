@@ -34,8 +34,8 @@ static void *Threadpool_Run(void *threadpool_obj) {
 
 	for (;;) {
 
-		Locker_Semwait(thread_pool->locker);
 		Locker_Lock(thread_pool->locker);
+		Locker_Condwait(thread_pool->locker);
 
 		threadpool_task = DataQueue_Pop(thread_pool->queue);
 
@@ -43,13 +43,12 @@ static void *Threadpool_Run(void *threadpool_obj) {
 			printf("threadpool_run:thread pool task obj is null!!!\n");
 			break;
 		}
-
 		Locker_Unlock(thread_pool->locker);
 		printf("thread func:%s,pid:%ld\n", threadpool_task->name,
 				syscall(SYS_gettid));
+
 		(*(threadpool_task->cb))(threadpool_task->arg);
 	}
-
 	Locker_Unlock(thread_pool->locker);
 	pthread_exit(NULL);
 
@@ -98,7 +97,7 @@ int Threadpool_Addtask(Threadpool *thread_pool, callback cb,
 	Locker_Lock(thread_pool->locker);
 	DataQueue_Push(thread_pool->queue, (void *) threadpool_task);
 	Locker_Unlock(thread_pool->locker);
-	Locker_Post(thread_pool->locker);
+	Locker_Signal(thread_pool->locker);
 
 	return 0;
 }
@@ -155,11 +154,13 @@ Threadpool *Threadpool_Create(unsigned int thread_count) {
 	thread_pool->thread_count = thread_count;
 
 	for (; i < thread_count; ++i) {
+
 		if (pthread_create(&thread_pool->threadmgr[i], NULL, Threadpool_Run,
 				(void*) thread_pool) != 0) {
 			Threadpool_Destroy(thread_pool);
 			return NULL;
 		}
+
 		thread_pool->thread_count++;
 		pthread_detach(thread_pool->threadmgr[i]);
 	}

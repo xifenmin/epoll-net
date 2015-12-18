@@ -57,6 +57,8 @@ int readData(ConnObj *conntobj,unsigned char *ptr,int len)
 		}
 	}else if (nLen == 0){
 		printf("connect closed:%d\n",conntobj->fd);
+		close(conntobj->fd);/*连接关闭*/
+		conntobj->fd = -1;
 		return 0;
 	}
 

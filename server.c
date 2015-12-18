@@ -191,11 +191,12 @@ void Server_Process(void *argv)
 
 	for (;;) {
 
-		Locker_Semwait(serverobj->lockerobj->locker);
 		Locker_Lock(serverobj->lockerobj->locker);
+		Locker_Condwait(serverobj->lockerobj->locker);
 
 		if (NULL != serverobj) {
 			if (DataQueue_Size(serverobj->dataqueue) > 0) {
+
 				_connobj = DataQueue_Pop(serverobj->dataqueue);
 
 				if (NULL != _connobj) {
@@ -204,7 +205,6 @@ void Server_Process(void *argv)
 				}
 			}
 		}
-
 		Locker_Unlock(serverobj->lockerobj->locker);
 	}
 }
@@ -216,7 +216,7 @@ void Server_Loop(void *argv)
 	if (NULL != serverobj){
 
 		for(;;){
-			serverobj->epollobj->wait(serverobj->epollobj->epollbase,serverobj,0);
+			serverobj->epollobj->wait(serverobj->epollobj->epollbase,serverobj,1);
 		}
 	}
 }

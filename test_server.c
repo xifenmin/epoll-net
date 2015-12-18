@@ -19,7 +19,7 @@ static  Logger  *logger = NULL;
 int readdata(ConnObj *connobj)
 {
 	if (NULL != connobj){
-		log_info(logger,"fd:%d,read len:%d",connobj->fd,connobj->recvlen);
+		log_info(logger,"fd:%d,read len:%d,addr:%p",connobj->fd,connobj->recvlen,connobj);
 	}
 	return 0;
 }

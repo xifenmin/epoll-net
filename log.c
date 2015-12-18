@@ -174,6 +174,7 @@ Logger *Logger_Create(int level,int rotate_size,char *name)
 			logger->fp = stderr;
 		} else {
 			logger->fp = fopen(name, "a");
+
 			if(logger->fp == NULL){
 			   printf("open log file faile:file:%s,err:%s\n",name,strerror(errno));
 			   return NULL;

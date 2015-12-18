@@ -128,8 +128,8 @@ void *DataList_Removehead(DataList *list) {
 void *DataList_Removetail(DataList *list) {
 	void *data = NULL;
 	if (list->tail != NULL) {
-		DataNode *temp = list->tail;
 
+		DataNode *temp = list->tail;
 		list->tail = list->tail->prev;
 
 		if (list->tail == NULL) {
