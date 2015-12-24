@@ -14,6 +14,7 @@
 #include "log.h"
 #include "connobj.h"
 #include "server.h"
+#include "cstr.h"
 
 int StartServer(ServerObj *serverobj,char *ip,unsigned short port,ProcRead procread)
  {
@@ -57,7 +58,7 @@ ServerObj *Server_Create(int events)
 		serverobj->connobj      = CreateNewConnObj();
 		serverobj->dataqueue    = DataQueue_Create();
 		serverobj->serverthread = Threadpool_Create(1);/*Proactor 模式，单线程*/
-		serverobj->datathread   = Threadpool_Create(5);/*数据线程池，处理接收数据用的*/
+		serverobj->datathread   = Threadpool_Create(1);/*数据线程池，处理接收数据用的*/
 
 		serverobj->connmgr->reset(serverobj->connobj);/*初始化socket连接对象*/
 	}
@@ -191,23 +192,24 @@ void Server_Process(void *argv)
 	ServerObj *serverobj = (ServerObj *) argv;
 
 	for (;;) {
-
-		Locker_Lock(serverobj->lockerobj->locker);
-		Locker_Condwait(serverobj->lockerobj->locker);
-
 		if (NULL != serverobj) {
+
 			if (DataQueue_Size(serverobj->dataqueue) > 0) {
-
+				Locker_Lock(serverobj->lockerobj->locker);
+				Locker_Condwait(serverobj->lockerobj->locker);
 				_connobj = DataQueue_Pop(serverobj->dataqueue);
-
 				if (NULL != _connobj) {
 					//回调用户接口函数
 					serverobj->procread(_connobj);
+
+					if(_connobj->recvptr != NULL){
+					  CStr_Free((char *)_connobj->recvptr);
+					}
 				}
+				Locker_Unlock(serverobj->lockerobj->locker);
 			}
 		}
 
-		Locker_Unlock(serverobj->lockerobj->locker);
 	}
 }
 

@@ -22,6 +22,8 @@ extern "C" {
 		logwarn(LEVEL_WARN,  "%s(%d): " fmt, __FILE__, __LINE__, ##args)
 #define log_error(fmt, args...)	\
 		logerror(LEVEL_ERROR, "%s(%d): " fmt, __FILE__, __LINE__, ##args)
+#define log_hex(len,fmt,args...)	\
+		loghex(len,fmt,__FILE__, __LINE__, ##args)
 
 enum LOGEVEL
 {
@@ -29,7 +31,8 @@ enum LOGEVEL
    LEVEL_ERROR,
    LEVEL_WARN,
    LEVEL_DEBUG,
-   LEVEL_INFO
+   LEVEL_INFO,
+   LEVEL_HEX
 };
 
 typedef struct taglogger Logger;
@@ -37,11 +40,12 @@ typedef struct taglogger Logger;
 Logger *Logger_Create(int level,int rotate_size,char *name);
 void Logger_Destory(void);
 
-int logerror(int level,const char *fmt, ...);
-int logdebug(int level,const char *fmt, ...);
-int logwarn(int level,const char *fmt, ...);
-int logwrite(int level, const char *fmt, ...);
-int loginfo(int level,const char *fmt, ...);
+int logerror(int level,char *fmt, ...);
+int logdebug(int level,char *fmt, ...);
+int logwarn(int level,char *fmt, ...);
+int logwrite(int level,char *fmt, ...);
+int loginfo(int level,char *fmt, ...);
+int loghex(int datalen,char *fmt,...);
 
 #ifdef __cplusplus
 }

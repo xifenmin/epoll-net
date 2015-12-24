@@ -17,8 +17,10 @@
 int readdata(ConnObj *connobj)
 {
 	if (NULL != connobj){
-		log_info("fd:%d,read len:%d,addr:%p",connobj->fd,connobj->recvlen,connobj);
+		//log_info("fd:%d,read len:%d,addr:%p",connobj->fd,connobj->recvlen,connobj);
+		loghex(connobj->recvlen,(char *)connobj->recvptr);
 	}
+
 	return 0;
 }
 

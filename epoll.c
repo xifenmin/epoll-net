@@ -10,6 +10,7 @@
 #include "connmgr.h"
 #include "epoll.h"
 #include "server.h"
+#include "cstr.h"
 
 EpollBase *Init_EpollBase(int events)
 {
@@ -71,6 +72,8 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 	int recvlen = 0;
 	int datalen = 0;
 
+	char *dptr = NULL;
+
 	if (NULL == serverobj) {
 		return -1;
 	}
@@ -101,24 +104,33 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 	if (EPOLLIN & events) { /*检测到读事件*/
 
 		recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
+		dptr    = CStr_Malloc((char *)recvbuffer);/*把recvbuffer，拷贝到dptr动态内存中*/
 
 		if (recvlen == 0){
-
 			log_debug("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);
 			return 0;
 		}
 
 		if (recvlen < 0) {
+
 			recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
+
 			if (recvlen > 0) {
+
+				if (dptr == NULL){
+					dptr    = CStr_Malloc((char *)recvbuffer);
+				}
+
 				datalen += recvlen;
+
 			}
 		}
 
 		datalen = recvlen;
-		//memcpy(conn->recvptr,recvbuffer,recvlen);
+
 		_connobj->recvlen = datalen;
+		_connobj->recvptr = (unsigned char *)dptr;/*接收数据指针*/
 	}
 
 	if (EPOLLOUT & events) { /*检测到写事件*/

@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <stdio.h>
+#include "log.h"
 #include "list.h"
 
 struct tagDataNode {
@@ -83,6 +85,8 @@ void DataList_Addtail(DataList *list, void *data) {
 		list->head = node;
 		list->tail = node;
 	}
+
+	//printf("add node:%p ,node data:%p\n",node,data);
 	list->count++;
 }
 //----------------------------e----------------------------------------------------------------------------
@@ -142,8 +146,10 @@ void *DataList_Removetail(DataList *list) {
 				list->head = list->tail;
 			}
 		}
+
 		data = temp->data;
 		free(temp);
+		//printf("remove node:%p ,node data:%p\n",temp,data);
 		list->count--;
 	}
 	return data;

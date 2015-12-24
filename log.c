@@ -52,6 +52,8 @@ static inline char* getLevelName(int level){
 			return "[INFO] ";
 		case LEVEL_DEBUG:
 			return "[DEBUG] ";
+		case LEVEL_HEX:
+			return "[HEX] ";
 	}
 	return "";
 }
@@ -91,19 +93,29 @@ static void rotate(Logger *logger)
 	logger->wcurr = 0;
 }
 
-static int logv(const char *fmt, va_list ap)
+static int logv(char *fmt,int datalen,va_list ap)
 {
 	Logger *logger = &loggobj;
 
+	const char hex_chars[] = "0123456789ABCDEF";
+	unsigned char *b = (unsigned char *)fmt;
+	unsigned char *e = b + datalen;
+
 	if (NULL == logger)
 		return -1;
+
 	char buf[LOG_BUF_LEN];
+	char hex[LOG_BUF_LEN];
+
 	int len;
 	char *ptr = buf;
 	time_t time;
 	struct timeval tv;
 	struct tm *tm;
 	int space = 0;
+
+	unsigned char index = 0;
+
 	gettimeofday(&tv, NULL);
 	time = tv.tv_sec;
 	tm = localtime(&time);
@@ -111,6 +123,7 @@ static int logv(const char *fmt, va_list ap)
 	len = sprintf(ptr, "%04d-%02d-%02d %02d:%02d:%02d.%03d ",
 			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour,
 			tm->tm_min, tm->tm_sec, (int) (tv.tv_usec / 1000));
+
 	if (len < 0) {
 		return -1;
 	}
@@ -120,7 +133,24 @@ static int logv(const char *fmt, va_list ap)
 	ptr += LEVEL_NAME_LEN;
 
 	space = sizeof(buf) - (ptr - buf) - 10;
-	len = vsnprintf(ptr, space, fmt, ap);
+
+	if (logger->level == LEVEL_HEX){
+
+		if (datalen > 0)
+		{
+			while(index < datalen-1 && b < e)
+			{
+				hex[index++] = hex_chars[((*b)>>4) & 0x0F];
+				hex[index++] = hex_chars[(*b) & 0x0F];
+				b++;
+			}
+		}
+
+		len = vsnprintf(ptr, space,hex, ap);
+	}else{
+	    len = vsnprintf(ptr, space, fmt, ap);
+	}
+
 	if (len < 0) {
 		return -1;
 	}
@@ -169,9 +199,9 @@ Logger *Logger_Create(int level,int rotate_size,char *name)
 		memcpy(logger->name,name,strlen(name));
 
 		logger->level       = level;
-		logger->wcurr      = 0;
-		logger->wtotal     = 0;
-		logger->rotatesize = rotate_size * 1024 * 1024;//日志切割默认都是MB;
+		logger->wcurr       = 0;
+		logger->wtotal      = 0;
+		logger->rotatesize  = rotate_size * 1024 * 1024;//日志切割默认都是MB;
 
 		logger->lockerobj = LockerObj_Create();
 
@@ -204,56 +234,7 @@ void Logger_Destory(void)
    }
 }
 
-int logerror(int level,const char *fmt, ...)
-{
-	Logger *logger = &loggobj;
-
-	int ret = 0;
-	if (NULL == logger)
-		return -1;
-
-	va_list ap;
-	va_start(ap, fmt);
-	ret = logv(fmt, ap);
-	va_end(ap);
-	return ret;
-}
-
-int logdebug(int level,const char *fmt, ...)
-{
-	Logger *logger = &loggobj;
-
-	int ret = 0;
-	if (NULL == logger)
-	   return -1;
-
-	setlevel(level);
-	va_list ap;
-	va_start(ap, fmt);
-	ret = logv(fmt, ap);
-	va_end(ap);
-
-	return ret;
-}
-
-int logwarn(int level,const char *fmt, ...)
-{
-	Logger *logger = &loggobj;
-
-	int ret = 0;
-
-	if (NULL == logger)
-	   return -1;
-
-	setlevel(level);
-	va_list ap;
-	va_start(ap, fmt);
-	ret = logv(fmt, ap);
-	va_end(ap);
-	return ret;
-}
-
-int loginfo(int level,const char *fmt, ...)
+int logerror(int level,char *fmt, ...)
 {
 	Logger *logger = &loggobj;
 
@@ -264,7 +245,75 @@ int loginfo(int level,const char *fmt, ...)
 	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
-	ret = logv(fmt, ap);
+	ret = logv(fmt,0,ap);
+	va_end(ap);
+	return ret;
+}
+
+int logdebug(int level,char *fmt, ...)
+{
+	Logger *logger = &loggobj;
+
+	int ret = 0;
+	if (NULL == logger)
+	   return -1;
+
+	setlevel(level);
+	va_list ap;
+	va_start(ap, fmt);
+	ret = logv(fmt,0,ap);
+	va_end(ap);
+
+	return ret;
+}
+
+int logwarn(int level,char *fmt, ...)
+{
+	Logger *logger = &loggobj;
+
+	int ret = 0;
+
+	if (NULL == logger)
+	   return -1;
+
+	setlevel(level);
+	va_list ap;
+	va_start(ap, fmt);
+	ret = logv(fmt,0,ap);
+	va_end(ap);
+	return ret;
+}
+
+int loginfo(int level,char *fmt, ...)
+{
+	Logger *logger = &loggobj;
+
+	int ret = 0;
+	if (NULL == logger)
+		return -1;
+
+	setlevel(level);
+	va_list ap;
+	va_start(ap, fmt);
+	ret = logv(fmt,0,ap);
+	va_end(ap);
+
+	return ret;
+}
+
+int loghex(int datalen,char *fmt,...)
+{
+	Logger *logger = &loggobj;
+
+	int ret = 0;
+
+	if (NULL == logger)
+		return -1;
+
+	setlevel(LEVEL_HEX);
+	va_list ap;
+	va_start(ap,fmt);
+	ret = logv(fmt,datalen,ap);
 	va_end(ap);
 
 	return ret;
