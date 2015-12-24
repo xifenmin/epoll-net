@@ -8,8 +8,45 @@
 #include <linux/tcp.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
-
+#include <sys/time.h>
+#include <sys/resource.h>
+#include "log.h"
 #include "connmgr.h"
+
+#define STACKSIZE (258 * 1024 * 1024)
+
+static inline int init_limit(void)
+{
+	struct rlimit lim;
+
+	if(getrlimit(RLIMIT_STACK, &lim) < 0)
+	{
+		perror("getrlimit fail!");
+		exit(1);
+	}
+
+	printf("stack begin size:%lu\n",lim.rlim_cur);
+
+	if(lim.rlim_cur < STACKSIZE)
+	{
+		lim.rlim_cur = STACKSIZE;
+		if(setrlimit(RLIMIT_STACK, &lim) < 0)
+		{
+			perror("setrlimit error!");
+			exit(1);
+		}
+	}
+
+	if(getrlimit(RLIMIT_STACK, &lim) < 0)
+	{
+		perror("getrlimit error!");
+		exit(1);
+	}
+
+	printf("stack end size:%lu\n",lim.rlim_cur);
+
+	return 0;
+}
 
 ConnMgr *ConnMgr_Create(void) {
 
@@ -25,6 +62,8 @@ ConnMgr *ConnMgr_Create(void) {
 		connmgr->get       = getConn;
 		connmgr->reset     = connobjReset;
 	}
+
+	init_limit();
 
 	return connmgr;
 }

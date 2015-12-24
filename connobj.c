@@ -8,6 +8,7 @@
 #include <linux/tcp.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include "log.h"
 #include "connobj.h"
 #include "connmgr.h"
 
@@ -54,9 +55,10 @@ int readData(ConnObj *conntobj,unsigned char *ptr,int len)
 	if (nLen < 0) {
 		if (errno == EAGAIN || errno == EINTR){
 			//尝试再读一次。
+			return -1;
 		}
 	}else if (nLen == 0){
-		printf("connect closed:%d\n",conntobj->fd);
+		log_info("connect closed:%d",conntobj->fd);
 		close(conntobj->fd);/*连接关闭*/
 		conntobj->fd = -1;
 		return 0;

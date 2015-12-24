@@ -17,6 +17,8 @@
 #define LOG_BUF_LEN		4096
 #define PATH_MAX        256
 
+static struct taglogger loggobj;
+
 struct taglogger {
     char name[PATH_MAX];
     int  level;
@@ -27,15 +29,17 @@ struct taglogger {
     LockerObj *lockerobj;
 };
 
-inline static void setlevel(Logger *logger,int level)
+static inline void setlevel(int level)
 {
+	Logger *logger = &loggobj;
+
 	if (NULL == logger)
 		return;
 
 	logger->level = level;
 }
 
-inline static char* getLevelName(int level){
+static inline char* getLevelName(int level){
 
    	switch(level){
 		case LEVEL_NONE:
@@ -87,8 +91,10 @@ static void rotate(Logger *logger)
 	logger->wcurr = 0;
 }
 
-static int logv(Logger *logger, const char *fmt, va_list ap)
- {
+static int logv(const char *fmt, va_list ap)
+{
+	Logger *logger = &loggobj;
+
 	if (NULL == logger)
 		return -1;
 	char buf[LOG_BUF_LEN];
@@ -135,12 +141,15 @@ static int logv(Logger *logger, const char *fmt, va_list ap)
 	if (logger->rotatesize > 0 && logger->wcurr > logger->rotatesize) {
 		rotate(logger);
 	}
+
 	logger->lockerobj->Unlock(logger->lockerobj->locker);
 	return 0;
 }
 
-static void logclose(Logger *logger)
+static void logclose(void)
 {
+	Logger *logger = &loggobj;
+
 	if (NULL != logger) {
 		if (logger->fp != stdin && logger->fp != stdout) {
 			fclose(logger->fp);
@@ -150,9 +159,7 @@ static void logclose(Logger *logger)
 
 Logger *Logger_Create(int level,int rotate_size,char *name)
 {
-	Logger *logger = NULL;
-
-	logger = (Logger *)malloc(sizeof(Logger));
+	Logger *logger = &loggobj;
 
 	if (NULL != logger) {
 
@@ -185,70 +192,79 @@ Logger *Logger_Create(int level,int rotate_size,char *name)
 	return logger;
 }
 
-void Logger_Destory(Logger *logger)
+void Logger_Destory(void)
 {
+	Logger *logger = &loggobj;
+
    if (logger != NULL){
 	   Locker_Free(logger->lockerobj->locker);
 	   Locker_Clear(logger->lockerobj->locker);
 	   logger->lockerobj->locker = NULL;
-	   logclose(logger);
-	   free(logger);
-	   logger = NULL;
+	   logclose();
    }
 }
 
-int logerror(Logger *logger,int level,const char *fmt, ...)
+int logerror(int level,const char *fmt, ...)
 {
+	Logger *logger = &loggobj;
+
 	int ret = 0;
 	if (NULL == logger)
 		return -1;
 
 	va_list ap;
 	va_start(ap, fmt);
-	ret = logv(logger, fmt, ap);
+	ret = logv(fmt, ap);
 	va_end(ap);
 	return ret;
 }
 
-int logdebug(Logger *logger,int level,const char *fmt, ...){
+int logdebug(int level,const char *fmt, ...)
+{
+	Logger *logger = &loggobj;
 
 	int ret = 0;
 	if (NULL == logger)
 	   return -1;
 
-	setlevel(logger,level);
+	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
-	ret = logv(logger, fmt, ap);
+	ret = logv(fmt, ap);
 	va_end(ap);
 
 	return ret;
 }
 
-int logwarn(Logger *logger,int level,const char *fmt, ...)
+int logwarn(int level,const char *fmt, ...)
 {
+	Logger *logger = &loggobj;
+
 	int ret = 0;
+
 	if (NULL == logger)
 	   return -1;
 
-	setlevel(logger,level);
+	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
-	ret = logv(logger, fmt, ap);
+	ret = logv(fmt, ap);
 	va_end(ap);
 	return ret;
 }
 
-int loginfo(Logger *logger,int level,const char *fmt, ...)
+int loginfo(int level,const char *fmt, ...)
 {
+	Logger *logger = &loggobj;
+
 	int ret = 0;
 	if (NULL == logger)
 		return -1;
 
-	setlevel(logger,level);
+	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
-	ret = logv(logger, fmt, ap);
+	ret = logv(fmt, ap);
 	va_end(ap);
 
 	return ret;

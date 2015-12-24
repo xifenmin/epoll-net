@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include "log.h"
 #include "lock.h"
 
 struct tagLock
@@ -18,7 +19,7 @@ LockerObj *LockerObj_Create(void)
     locker_obj  = (LockerObj *)malloc(sizeof(LockerObj));
 
     if (NULL == locker_obj){
-        printf("LockerObj_Create:LockerObj malloc fail!!!\n");
+    	log_error("LockerObj_Create:LockerObj malloc fail!!!");
         return NULL;
     }
 

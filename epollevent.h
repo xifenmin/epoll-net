@@ -46,7 +46,6 @@ int Epoll_Event_ModifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,in
 /*epoll wait*/
 int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout);
 
-
 #ifdef __cplusplus
 }
 #endif

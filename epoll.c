@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include "log.h"
 #include "connmgr.h"
 #include "epoll.h"
 #include "server.h"
@@ -20,7 +21,7 @@ EpollBase *Init_EpollBase(int events)
 	ephandle     = epoll_create(events);
 
 	if (ephandle < 0) {
-		printf("epoll create of size:%d failed! %s",events,strerror(errno));
+		log_error("epoll create of size:%d failed! %s",events,strerror(errno));
 		return NULL;
 	}
 
@@ -83,8 +84,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 	ret = getsockopt(_connobj->fd, SOL_SOCKET, SO_ERROR, (void *) &val, &lon);
 
 	if (ret == -1) {
-		printf("connect getsockopt() errno %d, %s, fd %d", errno,
-				strerror(errno), _connobj->fd);
+		log_error("connect getsockopt() errno %d, %s, fd %d", errno,strerror(errno), _connobj->fd);
 		return -1;
 	}
 
@@ -100,11 +100,11 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 
 	if (EPOLLIN & events) { /*检测到读事件*/
 
-		//printf("check event fd:%d\n",_connobj->fd);
 		recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
 
 		if (recvlen == 0){
-			printf("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
+
+			log_debug("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);
 			return 0;
 		}

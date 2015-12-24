@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/syscall.h>
+#include "log.h"
 #include "threadpool.h"
 #include "lock.h"
 #include "queue.h"
@@ -28,7 +29,7 @@ static void *Threadpool_Run(void *threadpool_obj) {
 	Threadpool *thread_pool = (Threadpool *) threadpool_obj;
 
 	if (NULL == thread_pool) {
-		printf("threadpool_run:thread pool obj is null!!!\n");
+		log_error("threadpool_run:thread pool obj is null!!!");
 		return NULL;
 	}
 
@@ -40,15 +41,16 @@ static void *Threadpool_Run(void *threadpool_obj) {
 		threadpool_task = DataQueue_Pop(thread_pool->queue);
 
 		if (NULL == threadpool_task) {
-			printf("threadpool_run:thread pool task obj is null!!!\n");
+			log_error("threadpool_run:thread pool task obj is null!!!");
 			break;
 		}
+
 		Locker_Unlock(thread_pool->locker);
-		printf("thread func:%s,pid:%ld\n", threadpool_task->name,
-				syscall(SYS_gettid));
+		log_info("thread func:%s,pid:%ld", threadpool_task->name,syscall(SYS_gettid));
 
 		(*(threadpool_task->cb))(threadpool_task->arg);
 	}
+
 	Locker_Unlock(thread_pool->locker);
 	pthread_exit(NULL);
 
@@ -76,15 +78,14 @@ int Threadpool_Addtask(Threadpool *thread_pool, callback cb,
 	Threadpool_Task *threadpool_task = NULL;
 
 	if (NULL == thread_pool || NULL == cb) {
-		printf(
-				"threadpool_addtask:thread pool object or callback obj is null !!!\n");
+		log_error("threadpool_addtask:thread pool object or callback obj is null !!!");
 		return -1;
 	}
 
 	threadpool_task = (Threadpool_Task *) malloc(sizeof(Threadpool_Task));
 
 	if (NULL == threadpool_task) {
-		printf("threadpool_addtask:thread pool task obj malloc faill!!!\n");
+		log_error("threadpool_addtask:thread pool task obj malloc faill!!!");
 		return -1;
 	}
 
@@ -106,22 +107,21 @@ int Threadpool_Destroy(Threadpool *thread_pool) {
 	int i = 0;
 
 	if (NULL == thread_pool) {
-		printf("threadpool_destroy:thread pool obj is null!!!\n");
+		log_error("threadpool_destroy:thread pool obj is null!!!");
 		return -1;
 	}
 
 	Locker_Lock(thread_pool->locker);
 
 	if (!Locker_Signalall(thread_pool->locker)) {
-		printf("threadpool_destroy:Locker single all thread fail!!!\n");
+		log_error("threadpool_destroy:Locker single all thread fail!!");
 		Locker_Unlock(thread_pool->locker);
 		return -1;
 	}
 
 	for (; i < thread_pool->thread_count; i++) {
 		if (pthread_join(thread_pool->threadmgr[i], NULL) != 0) {
-			printf("threadpool_destroy:pthread_join failed,pthrea id:%ld\n",
-					thread_pool->threadmgr[i]);
+			log_info("threadpool_destroy:pthread_join failed,pthrea id:%ld",thread_pool->threadmgr[i]);
 		}
 	}
 
@@ -138,14 +138,14 @@ Threadpool *Threadpool_Create(unsigned int thread_count) {
 
 	thread_pool = (Threadpool *) malloc(sizeof(Threadpool));
 	if (NULL == thread_pool) {
-		printf("threadpool_create:thread pool malloc fail!!!\n");
+		log_info("threadpool_create:thread pool malloc fail!!!");
 		return NULL;
 	}
 
-	thread_pool->threadmgr = (pthread_t *) malloc(
-			thread_count * sizeof(pthread_t));
+	thread_pool->threadmgr = (pthread_t *) malloc(thread_count * sizeof(pthread_t));
+
 	if (NULL == thread_pool->threadmgr) {
-		printf("threadpool_create:pthread pool object malloc fail!!!\n");
+		log_error("threadpool_create:pthread pool object malloc fail!!!");
 		return NULL;
 	}
 

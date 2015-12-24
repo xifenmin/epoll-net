@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <sys/epoll.h>
+#include "log.h"
 #include "queue.h"
 #include "epollevent.h"
 #include "server.h"
@@ -16,7 +17,6 @@
 EpollObj *Epoll_Create_Obj(int events)
 {
 	EpollObj *epoll_obj = NULL;
-
 	epoll_obj = (EpollObj *)malloc(sizeof(EpollObj));
 
 	if (NULL != epoll_obj){
@@ -54,7 +54,7 @@ int Epoll_Event_AddConn(struct tagEpollBase *evb, struct tagConnObj  *conn)
 	status = epoll_ctl(evb->epollhandle,EPOLL_CTL_ADD,conn->fd,evb->event);
 
 	if (status < 0) {
-		printf("epoll ctl on e %d client handle %d failed:%s",evb->epollhandle,conn->fd,strerror(errno));
+		log_error("epoll add conn event on %d client handle %d failed:%s",evb->epollhandle,conn->fd,strerror(errno));
 		return -1;
 	}
 
@@ -72,7 +72,7 @@ int Epoll_Event_DelConn(struct tagEpollBase *evb, struct tagConnObj  *conn)
 	status = epoll_ctl(evb->epollhandle, EPOLL_CTL_DEL,conn->fd,NULL);
 
 	if (status < 0){
-		printf("epoll ctl on e %d client handle %d failed:%s",evb->epollhandle,conn->fd,strerror(errno));
+		log_error("epoll ctl del conn event on e %d client handle %d failed:%s",evb->epollhandle,conn->fd,strerror(errno));
 		return -1;
 	}
 	return status;
@@ -96,12 +96,11 @@ int Epoll_Event_ModifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,in
     status = epoll_ctl(evb->epollhandle, EPOLL_CTL_MOD,conn->fd,evb->event);
 
     if (status < 0){
-		printf("epoll ctl on e %d client handle %d failed:%s",evb->epollhandle,conn->fd,strerror(errno));
+    	log_error("epoll modify conn event on e %d client handle %d failed:%s",evb->epollhandle,conn->fd,strerror(errno));
 		return -1;
     }
 
     return status;
-
 }
 
 int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
@@ -147,7 +146,7 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 				Locker_Lock(serverobj->lockerobj->locker);
 				DataQueue_Push(serverobj->dataqueue,_connobj);
 				Locker_Unlock(serverobj->lockerobj->locker);
-				Locker_Signal(serverobj->lockerobj->locker);
+				Locker_Signalall(serverobj->lockerobj->locker);
 			}
 		}
 	}

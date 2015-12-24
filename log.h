@@ -14,12 +14,12 @@
 extern "C" {
 #endif
 
-#define log_debug(logger,fmt, args...)	\
-		logdebug(logger,LEVEL_DEBUG, "%s(%d): " fmt, __FILE__, __LINE__, ##args)
-#define log_info(logger,fmt, args...)	\
-		loginfo(logger,LEVEL_INFO,  "%s(%d): " fmt, __FILE__, __LINE__, ##args)
-#define log_warn(logger,fmt, args...)	\
-		logwarn(logger,LEVEL_WARN,  "%s(%d): " fmt, __FILE__, __LINE__, ##args)
+#define log_debug(fmt, args...)	\
+		logdebug(LEVEL_DEBUG, "%s(%d): " fmt, __FILE__, __LINE__, ##args)
+#define log_info(fmt, args...)	\
+		loginfo(LEVEL_INFO,  "%s(%d): " fmt, __FILE__, __LINE__, ##args)
+#define log_warn(fmt, args...)	\
+		logwarn(LEVEL_WARN,  "%s(%d): " fmt, __FILE__, __LINE__, ##args)
 #define log_error(fmt, args...)	\
 		logerror(LEVEL_ERROR, "%s(%d): " fmt, __FILE__, __LINE__, ##args)
 
@@ -35,13 +35,13 @@ enum LOGEVEL
 typedef struct taglogger Logger;
 
 Logger *Logger_Create(int level,int rotate_size,char *name);
-void Logger_Clear(Logger *logger);
+void Logger_Destory(void);
 
-int logerror(Logger *logger,int level,const char *fmt, ...);
-int logdebug(Logger *logger,int level,const char *fmt, ...);
-int logwarn(Logger *logger,int level,const char *fmt, ...);
-int logwrite(Logger *logger,int level, const char *fmt, ...);
-int loginfo(Logger *logger,int level,const char *fmt, ...);
+int logerror(int level,const char *fmt, ...);
+int logdebug(int level,const char *fmt, ...);
+int logwarn(int level,const char *fmt, ...);
+int logwrite(int level, const char *fmt, ...);
+int loginfo(int level,const char *fmt, ...);
 
 #ifdef __cplusplus
 }

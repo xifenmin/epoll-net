@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "log.h"
 #include "hash.h"
 #include "list.h"
 
@@ -22,8 +23,8 @@ HashTable *HashTable_Create(unsigned int size,HashFun hashfun,HashCmpFun hashcmp
      HashTable *hashtable_obj = (HashTable *)malloc(sizeof(HashTable));
 
      if (NULL == hashtable_obj){
-          printf("HashTable_Create:hashtable obj malloc fail!!!\n");
-          return NULL;
+    	 log_error("HashTable_Create:hashtable obj malloc fail!!!");
+         return NULL;
      }
 
      hashtable_obj->hashsize   = size;
@@ -49,7 +50,7 @@ HashNode *HashNode_Create(void *data)
     HashNode *hashnode = (HashNode *)malloc(sizeof(HashNode));
 
     if (NULL == hashnode){
-       printf("HashNode_Create:hash node malloc fail!!!\n");
+       log_error("HashNode_Create:hash node malloc fail!!!");
        return NULL;
     }
 
@@ -63,7 +64,7 @@ void HashTable_Clear(HashTable *hashtable)
     int i=0;
 
     if (NULL == hashtable){
-       printf("HashTable_Clear:hash table obj is NULL!!!\n");
+       log_error("HashTable_Clear:hash table obj is NULL!!!");
        return;
     }
 
@@ -85,7 +86,7 @@ float HashTable_Loadfactor(HashTable *hashtable)
            float factor=0.00;
 
    if (NULL == hashtable){
-      printf("HashTable_Loadfactor:hash table obj is NULL!!!\n");
+	  log_error("HashTable_Loadfactor:hash table obj is NULL!!!");
       return 0;
    }
    
@@ -106,7 +107,7 @@ void *HashTable_Remove(HashTable *hashtable,void *key)
     void      *current = NULL;
 
     if (NULL == hashtable){
-       printf("HashTable_Remove:hash table is NULL!!!\n");
+      log_error("HashTable_Remove:hash table is NULL!!!");
        return NULL;
     }
 
@@ -127,7 +128,7 @@ void *HashTable_Remove(HashTable *hashtable,void *key)
 void HashTable_Add(HashTable *hashtable,void *key,void *data)
 {
    if (NULL == hashtable){
-       printf("HashTable_Add:hash table obj is NULL !!!\n");
+	   log_error("HashTable_Add:hash table obj is NULL !!!");
        return;
    }
 
@@ -147,14 +148,14 @@ void *HashTable_Get(HashTable *hashtable,void *key)
     DataNode *datanode = NULL;
 
    if (NULL == hashtable){
-        printf("HashTable_Add:hash table obj is NULL !!!\n");
-        return NULL;
+	   log_error("HashTable_Add:hash table obj is NULL !!!");
+       return NULL;
    }
 
    unsigned int index = hashtable->hashfun(key,strlen(key)) % hashtable->hashsize;
 
    if ( NULL == hashtable->buckets[index]){
-      printf("HashTable_Get:not find data in hashtable !!!\n");
+	  log_error("HashTable_Get:not find data in hashtable !!!");
       return NULL;
    }else{
       datanode = DataList_Find(hashtable->buckets[index]->List,hashtable->hashcmp,key);

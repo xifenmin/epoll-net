@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include <sys/epoll.h>
+#include "log.h"
 #include "connobj.h"
 #include "server.h"
 
@@ -109,7 +110,7 @@ int Server_Listen(ServerObj *serverobj)
 	}
 
 	if (bind(serverobj->connobj->fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-		printf("bind socket fail!socket:%d,error:%s\n",serverobj->connobj->fd,strerror(errno));
+		log_error("bind socket fail!socket:%d,error:%s",serverobj->connobj->fd,strerror(errno));
 		goto sock_err;
 	}
 
@@ -168,7 +169,7 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 			goto sock_err;
 		}
 
-		printf("create net connect:addr;%p,fd:%d\n",_connobj,_connobj->fd);
+		log_info("create net connect:addr;%p,fd:%d\n",_connobj,_connobj->fd);
 
 	}else{
 		goto sock_err;
@@ -205,6 +206,7 @@ void Server_Process(void *argv)
 				}
 			}
 		}
+
 		Locker_Unlock(serverobj->lockerobj->locker);
 	}
 }
