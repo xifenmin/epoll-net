@@ -75,6 +75,7 @@ int Epoll_Event_DelConn(struct tagEpollBase *evb, struct tagConnObj  *conn)
 		log_error("epoll ctl del conn event on e %d client handle %d failed:%s",evb->epollhandle,conn->fd,strerror(errno));
 		return -1;
 	}
+
 	return status;
 }
 

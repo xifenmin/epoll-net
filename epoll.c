@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <time.h>
 #include "log.h"
 #include "connmgr.h"
 #include "epoll.h"
@@ -78,7 +79,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 		return -1;
 	}
 
-	if (serverobj->connobj == _connobj)
+	if (serverobj->connobj == _connobj) /*如果是服务端*/
 		_connobj = Server_Accept(serverobj);
 
 	if (_connobj == NULL)
@@ -119,18 +120,19 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 			if (recvlen > 0) {
 
 				if (dptr == NULL){
-					dptr    = CStr_Malloc((char *)recvbuffer);
+					dptr = CStr_Malloc((char *)recvbuffer);
 				}
 
 				datalen += recvlen;
-
 			}
 		}
 
 		datalen = recvlen;
 
-		_connobj->recvlen = datalen;
-		_connobj->recvptr = (unsigned char *)dptr;/*接收数据指针*/
+		_connobj->recvlen   = datalen;
+		_connobj->recvptr   = (unsigned char *)dptr;/*接收数据指针*/
+		_connobj->last_time = time(NULL);/*更新连接对象的时间*/
+
 	}
 
 	if (EPOLLOUT & events) { /*检测到写事件*/

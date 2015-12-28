@@ -117,6 +117,7 @@ static int logv(char *fmt,int datalen,va_list ap)
 	unsigned char index = 0;
 
 	gettimeofday(&tv, NULL);
+
 	time = tv.tv_sec;
 	tm = localtime(&time);
 	/* %3ld 在数值位数超过3位的时候不起作用, 所以这里转成int */

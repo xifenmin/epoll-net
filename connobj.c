@@ -17,6 +17,11 @@ ConnObj *CreateNewConnObj(void)
 	ConnObj *connobj = NULL;
 	connobj = (ConnObj *)malloc(sizeof(ConnObj));
 
+	if (connobj != NULL){
+		connobj->sendptr = NULL;
+		connobj->recvptr = NULL;
+	}
+
 	return connobj;
 }
 

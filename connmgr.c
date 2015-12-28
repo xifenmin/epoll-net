@@ -12,6 +12,7 @@
 #include <sys/resource.h>
 #include "log.h"
 #include "connmgr.h"
+#include "cstr.h"
 
 #define STACKSIZE (258 * 1024 * 1024)
 
@@ -30,6 +31,7 @@ static inline int init_limit(void)
 	if(lim.rlim_cur < STACKSIZE)
 	{
 		lim.rlim_cur = STACKSIZE;
+
 		if(setrlimit(RLIMIT_STACK, &lim) < 0)
 		{
 			perror("setrlimit error!");
@@ -86,6 +88,8 @@ void ConnMgr_Clear(struct tagConntMgr *connmgr) {
 		}
 	}
 
+	DataQueue_Clear(connmgr->queue);
+
 	connmgr->lockerobj->Unlock(connmgr->lockerobj->locker);
 	free(connmgr);
 }
@@ -97,9 +101,7 @@ void  connobjReset(ConnObj *connobj)
 		connobj->type      = TCP;
 		connobj->activity  = SOCKET_CONNCLOSED;
 		connobj->send      = sendData;
-		connobj->sendptr   = NULL; //还没处理内存释放
 		connobj->sendlen   = 0;
-		connobj->recvptr   = NULL;//还没处理内存释放
 		connobj->recvlen   = 0;
 		connobj->recv      = readData;
 		connobj->nodelay   = noDelay;

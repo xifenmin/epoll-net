@@ -40,7 +40,8 @@ char *CStr_Malloc(const char *srcstr)
 void CStr_Free(char *srcstr)
 {
    if (NULL != srcstr){
-      free(srcstr - sizeof(struct tagCStr));
+       free(srcstr - sizeof(struct tagCStr));
+	   srcstr = NULL;
    }
 }
 //-----------------------------------------------------------

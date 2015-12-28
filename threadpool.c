@@ -113,7 +113,7 @@ int Threadpool_Destroy(Threadpool *thread_pool) {
 
 	Locker_Lock(thread_pool->locker);
 
-	if (!Locker_Signalall(thread_pool->locker)) {
+	if (!Locker_Signal(thread_pool->locker)) {
 		log_error("threadpool_destroy:Locker single all thread fail!!");
 		Locker_Unlock(thread_pool->locker);
 		return -1;
