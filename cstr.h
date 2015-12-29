@@ -18,7 +18,7 @@ extern "C" {
 
 typedef struct tagCStr   CStr;
 
-char  *CStr_Malloc(const char *srcstr);
+char  *CStr_Malloc(const char *srcstr,int len);
 void   CStr_Free(char *srcstr);
 size_t CStr_Len(const char *srcstr);
 char   *CStr_Dup(const char *srcstr);

@@ -11,8 +11,16 @@
 #include "connobj.h"
 #include "server.h"
 #include "log.h"
+#include "cstr.h"
 
 #define  FILE_NAME "/home/xfm/xfm/net/test_server.log"
+
+typedef struct tagtest
+{
+	unsigned char byBuffer[1024];
+	int lon;
+	int lat;
+}TEST;
 
 void DebugInfo(unsigned char *puc, int nLen)
 {
@@ -85,10 +93,12 @@ int main(int argc,char **argv)
 {
 	int ret  = 0;
 	int port = 0;
+
 	ServerObj *serverobj = NULL;
 
 	if (argc < 2)
        return -1;
+
 
 	port = atoi(argv[2]);
 	ret  = StartServer(serverobj,argv[1],port,readdata);

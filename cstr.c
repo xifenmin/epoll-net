@@ -31,10 +31,9 @@ char *CStr_Create(const void *src,size_t datalen)
     return NULL;
 }
 //-----------------------------------------------------------
-char *CStr_Malloc(const char *srcstr)
+char *CStr_Malloc(const char *srcstr,int len)
 {
-   size_t datalen = (srcstr == NULL) ?0:strlen(srcstr);
-   return CStr_Create(srcstr,datalen);
+   return CStr_Create(srcstr,len);
 }
 //-----------------------------------------------------------
 void CStr_Free(char *srcstr)

@@ -13,6 +13,7 @@
 #include "queue.h"
 #include "epollevent.h"
 #include "server.h"
+#include "cstr.h"
 
 EpollObj *Epoll_Create_Obj(int events)
 {
@@ -147,7 +148,7 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 				Locker_Lock(serverobj->lockerobj->locker);
 				DataQueue_Push(serverobj->dataqueue,_connobj);
 				Locker_Unlock(serverobj->lockerobj->locker);
-				Locker_Signal(serverobj->lockerobj->locker);
+				Locker_Post(serverobj->lockerobj->locker);
 			}
 		}
 	}

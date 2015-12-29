@@ -21,7 +21,6 @@ int StartServer(ServerObj *serverobj,char *ip,unsigned short port,ProcRead procr
 	int ret = 0;
 
 	if (serverobj == NULL) {
-
 		serverobj = Server_Create(1024);
 
 		if (NULL != serverobj) {
@@ -33,10 +32,11 @@ int StartServer(ServerObj *serverobj,char *ip,unsigned short port,ProcRead procr
 
 			ret = Server_Listen(serverobj);
 
-			Threadpool_Addtask(serverobj->serverthread, &Server_Loop,
+			Threadpool_Addtask(serverobj->datathread,&Server_Process,
+							"Server_Process", serverobj);
+
+			Threadpool_Addtask(serverobj->serverthread,&Server_Loop,
 					"Server_Loop", serverobj);
-			Threadpool_Addtask(serverobj->datathread, &Server_Process,
-					"Server_Process", serverobj);
 		}
 	}
 
@@ -82,7 +82,7 @@ void Server_Clear(ServerObj *serverobj)
 }
 
 int Server_Listen(ServerObj *serverobj)
- {
+{
 	int sock = -1;
 	int opt  = 1;
 
@@ -194,12 +194,9 @@ void Server_Process(void *argv)
 	for (;;) {
 
 		if (NULL != serverobj) {
-
+			Locker_Semwait(serverobj->lockerobj->locker);
 			Locker_Lock(serverobj->lockerobj->locker);
-			Locker_Condwait(serverobj->lockerobj->locker);
-
 		    if (DataQueue_Size(serverobj->dataqueue) > 0) {
-
 				_connobj = DataQueue_Pop(serverobj->dataqueue);
 
 				if (NULL != _connobj) {
@@ -212,7 +209,6 @@ void Server_Process(void *argv)
 					}
 				}
 			}
-
 		    Locker_Unlock(serverobj->lockerobj->locker);
 		}
 	}
