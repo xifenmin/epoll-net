@@ -79,13 +79,10 @@ int readdata(ConnObj *connobj)
 	//int len = 0;
 
 	if (NULL != connobj){
-		log_info("fd:%d,read len:%d,addr:%p,info:%s",connobj->fd,connobj->recvlen,connobj,connobj->recvptr);
-		//loghex(connobj->recvlen,(char *)connobj->recvptr);
-		//len = Decode((char *)connobj->recvptr,connobj->recvlen,data);
-		//loghex(len,data);
+		//log_info("fd:%d,read len:%d,addr:%p,info:%s",connobj->fd,connobj->recvlen,connobj,connobj->recvptr);
+		loghex(connobj->recvlen,(char *)connobj->recvptr);
 		//DebugInfo(connobj->recvptr,connobj->recvlen);
 	}
-
 	return 0;
 }
 

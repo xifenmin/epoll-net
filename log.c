@@ -104,8 +104,8 @@ static int logv(char *fmt,int datalen,va_list ap)
 	if (NULL == logger)
 		return -1;
 
-	char buf[LOG_BUF_LEN];
-	char hex[LOG_BUF_LEN];
+	char buf[LOG_BUF_LEN] = {0};
+	char hex[LOG_BUF_LEN] = {0};
 
 	int len;
 	char *ptr = buf;
@@ -119,15 +119,18 @@ static int logv(char *fmt,int datalen,va_list ap)
 	gettimeofday(&tv, NULL);
 
 	time = tv.tv_sec;
-	tm = localtime(&time);
+	tm   = localtime(&time);
+
 	/* %3ld 在数值位数超过3位的时候不起作用, 所以这里转成int */
+
 	len = sprintf(ptr, "%04d-%02d-%02d %02d:%02d:%02d.%03d ",
-			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour,
-			tm->tm_min, tm->tm_sec, (int) (tv.tv_usec / 1000));
+			      tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour,
+			      tm->tm_min, tm->tm_sec, (int) (tv.tv_usec / 1000));
 
 	if (len < 0) {
 		return -1;
 	}
+
 	ptr += len;
 
 	memcpy(ptr, getLevelName(logger->level), LEVEL_NAME_LEN);
@@ -135,19 +138,17 @@ static int logv(char *fmt,int datalen,va_list ap)
 
 	space = sizeof(buf) - (ptr - buf) - 10;
 
-	if (logger->level == LEVEL_HEX){
+	if (logger->level == LEVEL_HEX)
+	{
+	   while(index < LOG_BUF_LEN -1 && b < e)
+	   {
+		   hex[index++] = hex_chars[((*b)>>4) & 0x0F];
+		   hex[index++]	= hex_chars[(*b) & 0x0F];
+		   b++;
+	   }
 
-		if (datalen > 0)
-		{
-			while(index < datalen-1 && b < e)
-			{
-				hex[index++] = hex_chars[((*b)>>4) & 0x0F];
-				hex[index++] = hex_chars[(*b) & 0x0F];
-				b++;
-			}
-		}
+	   len = vsnprintf(ptr, space,hex, ap);
 
-		len = vsnprintf(ptr, space,hex, ap);
 	}else{
 	    len = vsnprintf(ptr, space, fmt, ap);
 	}
@@ -155,6 +156,7 @@ static int logv(char *fmt,int datalen,va_list ap)
 	if (len < 0) {
 		return -1;
 	}
+
 	ptr += len > space ? space : len;
 	*ptr++ = '\n';
 	*ptr = '\0';
