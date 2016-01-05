@@ -76,9 +76,13 @@ int Decode(const char *data, const int len,char *_data)
 
 int readdata(ConnObj *connobj)
 {
-	if (NULL != connobj && connobj->activity == SOCKET_CONNECTED){
+	char data[4096] = {0};
+	int  len = 0;
+	if (NULL != connobj && connobj->activity == SOCKET_CONNECTED && connobj->recvptr != NULL){
 		//log_info("fd:%d,read len:%d,addr:%p,info:%s",connobj->fd,connobj->recvlen,connobj,connobj->recvptr);
-		loghex(connobj->recvlen,(char *)connobj->recvptr);
+
+		len = Decode((char *)connobj->recvptr,connobj->recvlen,data);
+		loghex(len,data);
 		//DebugInfo(connobj->recvptr,connobj->recvlen);
 	}
 	return 0;

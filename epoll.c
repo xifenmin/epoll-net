@@ -108,14 +108,16 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 
 		if (recvlen == 0){
 
+			Locker_Lock(serverobj->lockerobj->locker);
 			serverobj->epollobj->del(serverobj->epollobj->epollbase,_connobj);
 			_connobj->close(_connobj);
 
 			log_debug("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);
-
+		    Locker_Unlock(serverobj->lockerobj->locker);
 			return 0;
 		}
+
 		if (recvlen < 0) {
 
 			recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));

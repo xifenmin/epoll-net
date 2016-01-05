@@ -126,9 +126,8 @@ int Server_Listen(ServerObj *serverobj)
 sock_err:
 
 	if(serverobj->connobj->fd >= 0){
-		close(serverobj->connobj->fd);
+		serverobj->connobj->close(serverobj->connobj);
 	}
-
 	return -1;
 }
 
@@ -194,8 +193,10 @@ void Server_Process(void *argv)
 	for (;;) {
 
 		if (NULL != serverobj) {
+
 			Locker_Semwait(serverobj->lockerobj->locker);
 			Locker_Lock(serverobj->lockerobj->locker);
+
 		    if (DataQueue_Size(serverobj->dataqueue) > 0) {
 				_connobj = DataQueue_Pop(serverobj->dataqueue);
 
