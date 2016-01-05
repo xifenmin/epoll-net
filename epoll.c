@@ -107,11 +107,15 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 		recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
 
 		if (recvlen == 0){
+
+			serverobj->epollobj->del(serverobj->epollobj->epollbase,_connobj);
+			_connobj->close(_connobj);
+
 			log_debug("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);
+
 			return 0;
 		}
-
 		if (recvlen < 0) {
 
 			recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
@@ -133,10 +137,10 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 		_connobj->recvlen   = datalen;
 		_connobj->recvptr   = (unsigned char *)dptr;/*接收数据指针*/
 		_connobj->last_time = time(NULL);/*更新连接对象的时间*/
-
 	}
 
 	if (EPOLLOUT & events) { /*检测到写事件*/
+
 		if (_connobj->sendptr != NULL && _connobj->sendlen > 0) {
 			datalen = _connobj->send(_connobj);
 		}

@@ -22,7 +22,6 @@ typedef struct tagThreadtask {
 	void *arg;
 	char name[125];
 } Threadpool_Task;
-
 //---------------------------------------------------------- 
 static void *Threadpool_Run(void *threadpool_obj) {
 

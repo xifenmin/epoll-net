@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include "connobj.h"
 #include "server.h"
 #include "log.h"
@@ -75,10 +76,7 @@ int Decode(const char *data, const int len,char *_data)
 
 int readdata(ConnObj *connobj)
 {
-	//char data[1024] = {0};
-	//int len = 0;
-
-	if (NULL != connobj){
+	if (NULL != connobj && connobj->activity == SOCKET_CONNECTED){
 		//log_info("fd:%d,read len:%d,addr:%p,info:%s",connobj->fd,connobj->recvlen,connobj,connobj->recvptr);
 		loghex(connobj->recvlen,(char *)connobj->recvptr);
 		//DebugInfo(connobj->recvptr,connobj->recvlen);

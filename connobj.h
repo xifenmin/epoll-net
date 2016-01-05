@@ -22,7 +22,7 @@ typedef int  (*SendData)(struct tagConnObj *);/*发送回调*/
 typedef int  (*ReadData)(struct tagConnObj *,unsigned char *ptr,int len);/*接收回调*/
 typedef void (*Nodelay)(struct tagConnObj *,int enable);
 typedef int  (*ProcRead)(struct tagConnObj *);
-
+typedef void (*Close)(struct tagConnObj *);
 
 struct tagConnObj {
 	int       fd; /*sockt 对象*/
@@ -40,10 +40,11 @@ struct tagConnObj {
 	Nodelay        nodelay;
 	Keepalive      keepalive;
 	Noblock        noblock;
+	Close          close;
 };
 
 ConnObj *CreateNewConnObj(void);
-
+void     closeConnObj(ConnObj *conntobj);
 /*发送数据*/
 int sendData(ConnObj *conntobj);
 /*接收数据*/

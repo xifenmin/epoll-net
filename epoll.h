@@ -29,7 +29,6 @@ struct tagEpollBase
 
 typedef struct tagEpollBase EpollBase;
 
-
 EpollBase *Init_EpollBase(int events);
 void  Clear_EpollBase(EpollBase *evb);
 /*epoll_wait 到来时，回调接口*/

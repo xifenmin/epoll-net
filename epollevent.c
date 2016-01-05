@@ -141,7 +141,6 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 		if (evb->cb != NULL) {
 
 			_connobj = ev->data.ptr;
-
 			len = evb->cb(serverobj,_connobj,events);
 
 			if (len >0){

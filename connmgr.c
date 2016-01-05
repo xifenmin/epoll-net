@@ -104,6 +104,7 @@ void  connobjReset(ConnObj *connobj)
 		connobj->sendlen   = 0;
 		connobj->recvlen   = 0;
 		connobj->recv      = readData;
+		connobj->close     = closeConnObj;
 		connobj->nodelay   = noDelay;
 		connobj->keepalive = keepAlive;
 		connobj->noblock   = noBlock;
@@ -123,7 +124,6 @@ int setConn(struct tagConntMgr *connmgr, struct tagConnObj *conntobj) {
 		}
 		connmgr->lockerobj->Unlock(connmgr->lockerobj->locker);
 	}
-
 	return 0;
 }
 

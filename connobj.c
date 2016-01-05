@@ -63,13 +63,21 @@ int readData(ConnObj *conntobj,unsigned char *ptr,int len)
 			return -1;
 		}
 	}else if (nLen == 0){
-		log_info("connect closed:%d",conntobj->fd);
-		close(conntobj->fd);/*连接关闭*/
-		conntobj->fd = -1;
 		return 0;
 	}
 
 	return nLen;
+}
+
+void closeConnObj(ConnObj *conntobj)
+{
+     if (NULL != conntobj){
+
+ 		log_info("connect closed:%d",conntobj->fd);
+ 		close(conntobj->fd);/*连接关闭*/
+ 		conntobj->activity = SOCKET_CONNCLOSED;
+ 		conntobj->fd = -1;
+     }
 }
 
 void noDelay(ConnObj *connobj,int enable)
