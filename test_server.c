@@ -23,6 +23,9 @@ typedef struct tagtest
 	int lat;
 }TEST;
 
+
+ServerObj *serverobj = NULL;
+
 void DebugInfo(unsigned char *puc, int nLen)
 {
 	int i;
@@ -78,33 +81,32 @@ int readdata(ConnObj *connobj)
 {
 	char data[4096] = {0};
 	int  len = 0;
+
 	if (NULL != connobj && connobj->activity == SOCKET_CONNECTED && connobj->recvptr != NULL){
 		//log_info("fd:%d,read len:%d,addr:%p,info:%s",connobj->fd,connobj->recvlen,connobj,connobj->recvptr);
-
 		len = Decode((char *)connobj->recvptr,connobj->recvlen,data);
+        log_info("ip:%s,port:%d",connobj->ip,connobj->port);
 		loghex(len,data);
-		//DebugInfo(connobj->recvptr,connobj->recvlen);
+
+	    ServerSend(serverobj,connobj,"hello,world\n",strlen("hello,world\n"));
 	}
+
 	return 0;
 }
 
 int main(int argc,char **argv)
 {
-	int ret  = 0;
 	int port = 0;
-
-	ServerObj *serverobj = NULL;
 
 	if (argc < 2)
        return -1;
 
-
 	port = atoi(argv[2]);
-	ret  = StartServer(serverobj,argv[1],port,readdata);
+	serverobj = StartServer(argv[1],port,readdata);
 
 	Logger_Create(LEVEL_INFO,10,FILE_NAME);
 
-	printf("Start Server:%d\n",ret);
+	printf("Start Server:%p\n",serverobj);
 
 	for(;;){
 		sleep(1);

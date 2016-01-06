@@ -48,8 +48,7 @@ int Epoll_Event_AddConn(struct tagEpollBase *evb, struct tagConnObj  *conn)
 	if (evb == NULL || conn == NULL) {
 		 return -1;
 	}
-
-	evb->event->events   = (uint32_t) (EPOLLIN | EPOLLOUT | EPOLLET);
+	evb->event->events   = (uint32_t) (EPOLLIN |EPOLLET);//| EPOLLOUT
 	evb->event->data.ptr = conn;
 
 	status = epoll_ctl(evb->epollhandle,EPOLL_CTL_ADD,conn->fd,evb->event);
@@ -93,7 +92,7 @@ int Epoll_Event_ModifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,in
     if (events & EVENT_WRITE)
     	events |= EPOLLOUT;
 
-    evb->event->events = events;
+    evb->event->events = events | EPOLLET;
 
     status = epoll_ctl(evb->epollhandle, EPOLL_CTL_MOD,conn->fd,evb->event);
 
@@ -128,6 +127,11 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 
 		if (ev->events & EPOLLOUT) {
 			events |= EVENT_WRITE;
+
+			if (evb->cb != NULL){
+				_connobj = ev->data.ptr;
+				evb->cb(serverobj, _connobj, events);
+			}
 		}
 
 		if (ev->events & EPOLLERR) {
@@ -135,24 +139,23 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 		}
 
 		if (ev->events & (EPOLLIN | EPOLLHUP)) {
+
 			events |= EVENT_READ;
-		}
 
-		if (evb->cb != NULL) {
+			if (evb->cb != NULL) {
 
-			_connobj = ev->data.ptr;
-			len = evb->cb(serverobj,_connobj,events);
+				_connobj = ev->data.ptr;
+				len = evb->cb(serverobj, _connobj, events);
 
-			if (len >0){
-				Locker_Lock(serverobj->lockerobj->locker);
-				DataQueue_Push(serverobj->dataqueue,_connobj);
-				Locker_Unlock(serverobj->lockerobj->locker);
-				Locker_Post(serverobj->lockerobj->locker);
+				if (len > 0) {
+					Locker_Lock(serverobj->lockerobj->locker);
+					DataQueue_Push(serverobj->rqueue, _connobj);
+					Locker_Unlock(serverobj->lockerobj->locker);
+					Locker_Post(serverobj->lockerobj->locker);
+				}
 			}
 		}
 	}
 
 	return fd_active_nums;
 }
-
-

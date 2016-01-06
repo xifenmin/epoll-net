@@ -16,9 +16,9 @@
 #include "server.h"
 #include "cstr.h"
 
-int StartServer(ServerObj *serverobj,char *ip,unsigned short port,ProcRead procread)
+ServerObj * StartServer(char *ip,unsigned short port,ProcRead procread)
  {
-	int ret = 0;
+	ServerObj *serverobj = NULL;
 
 	if (serverobj == NULL) {
 		serverobj = Server_Create(1024);
@@ -30,17 +30,18 @@ int StartServer(ServerObj *serverobj,char *ip,unsigned short port,ProcRead procr
 			serverobj->connobj->port = port;
 			serverobj->procread      = procread;/*注册调用者接收回调函数*/
 
-			ret = Server_Listen(serverobj);
+			Server_Listen(serverobj);
 
 			Threadpool_Addtask(serverobj->datathread,&Server_Process,
 							"Server_Process", serverobj);
 
 			Threadpool_Addtask(serverobj->serverthread,&Server_Loop,
 					"Server_Loop", serverobj);
+
 		}
 	}
 
-	return ret;
+	return serverobj;
 }
 
 ServerObj *Server_Create(int events)
@@ -55,7 +56,8 @@ ServerObj *Server_Create(int events)
 		serverobj->connmgr      = ConnMgr_Create();
 		serverobj->lockerobj    = LockerObj_Create();
 		serverobj->connobj      = CreateNewConnObj();
-		serverobj->dataqueue    = DataQueue_Create();
+		serverobj->rqueue       = DataQueue_Create();
+		serverobj->squeue       = DataQueue_Create();
 		serverobj->serverthread = Threadpool_Create(1);/*Proactor 模式，单线程*/
 		serverobj->datathread   = Threadpool_Create(5);/*数据线程池，处理接收数据用的*/
 
@@ -184,10 +186,26 @@ sock_err:
 	}
     return NULL;
 }
+int  ServerSend(ServerObj *serverobj,ConnObj *connobj,char *data,int len)
+{
+	char *dptr   = NULL;
+	int   result = 0;
+
+    if (NULL != connobj && serverobj != NULL && len > 0){
+    	Locker_Lock(serverobj->lockerobj->locker);
+    	dptr = CStr_Malloc((char *)data,len);
+    	connobj->sendptr = (unsigned char *)dptr;
+    	connobj->sendlen = len;
+    	Epoll_Event_ModifyConn(serverobj->epollobj->epollbase,connobj,EVENT_READ|EVENT_WRITE);
+    	Locker_Unlock(serverobj->lockerobj->locker);
+    }
+
+    return result;
+}
 
 void Server_Process(void *argv)
 {
-	ConnObj *_connobj = NULL;
+	ConnObj *_connobj    = NULL;
 	ServerObj *serverobj = (ServerObj *) argv;
 
 	for (;;) {
@@ -197,8 +215,10 @@ void Server_Process(void *argv)
 			Locker_Semwait(serverobj->lockerobj->locker);
 			Locker_Lock(serverobj->lockerobj->locker);
 
-		    if (DataQueue_Size(serverobj->dataqueue) > 0) {
-				_connobj = DataQueue_Pop(serverobj->dataqueue);
+		    if (DataQueue_Size(serverobj->rqueue) > 0) {
+
+				_connobj = DataQueue_Pop(serverobj->rqueue);
+				Locker_Unlock(serverobj->lockerobj->locker);
 
 				if (NULL != _connobj) {
 					//回调用户接口函数
@@ -208,6 +228,7 @@ void Server_Process(void *argv)
 					   CStr_Free((char *)_connobj->recvptr);
 					   _connobj->recvptr = NULL;
 					}
+					continue;
 				}
 			}
 		    Locker_Unlock(serverobj->lockerobj->locker);

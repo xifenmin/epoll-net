@@ -102,7 +102,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 		close(_connobj->fd);
 	}
 
-	if (EPOLLIN & events) { /*检测到读事件*/
+	if (EVENT_READ & events) { /*检测到读事件*/
 
 		recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
 
@@ -111,10 +111,10 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 			Locker_Lock(serverobj->lockerobj->locker);
 			serverobj->epollobj->del(serverobj->epollobj->epollbase,_connobj);
 			_connobj->close(_connobj);
-
-			log_debug("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);
-		    Locker_Unlock(serverobj->lockerobj->locker);
+			Locker_Unlock(serverobj->lockerobj->locker);
+			log_debug("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
+
 			return 0;
 		}
 
@@ -126,12 +126,12 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 
 				if (dptr == NULL){
 					dptr = CStr_Malloc((char *)recvbuffer,recvlen);
-
 				}
+
 				datalen += recvlen;
 			}
 		}else{
-			   dptr = CStr_Malloc((char *)recvbuffer,recvlen);
+			    dptr = CStr_Malloc((char *)recvbuffer,recvlen);
 		}
 
 		datalen = recvlen;
@@ -141,14 +141,21 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 		_connobj->last_time = time(NULL);/*更新连接对象的时间*/
 	}
 
-	if (EPOLLOUT & events) { /*检测到写事件*/
+	if (EVENT_WRITE & events) { /*检测到写事件*/
 
 		if (_connobj->sendptr != NULL && _connobj->sendlen > 0) {
+
 			datalen = _connobj->send(_connobj);
+			log_info("send data ip:%s,port:%d,data:%s,len:%d",_connobj->ip,_connobj->port,_connobj->sendptr,datalen);
+
+			Locker_Lock(serverobj->lockerobj->locker);
+			if (_connobj->sendptr != NULL) {
+				CStr_Free((char *) _connobj->sendptr);
+				_connobj->sendptr = NULL;
+			}
+			Locker_Unlock(serverobj->lockerobj->locker);
 		}
 	}
 
 	return datalen;
 }
-
-

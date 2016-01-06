@@ -85,7 +85,6 @@ void DataList_Addtail(DataList *list, void *data) {
 		list->head = node;
 		list->tail = node;
 	}
-
 	//printf("add node:%p ,node data:%p\n",node,data);
 	list->count++;
 }

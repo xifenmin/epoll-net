@@ -37,12 +37,7 @@ int sendData(ConnObj *conntobj) {
 
 	len = conntobj->sendlen;
 
-	while (len > 0) {
-		ret = write(conntobj->fd,conntobj->sendptr,len);
-		len -= ret;
-		conntobj->sendptr += ret;
-		sendlen += ret;
-	}
+	ret = write(conntobj->fd,conntobj->sendptr,len);
 
 	return sendlen;
 }
