@@ -58,6 +58,17 @@ static inline char* getLevelName(int level){
 	return "";
 }
 
+static void logclose(void)
+{
+	Logger *logger = &loggobj;
+
+	if (NULL != logger) {
+		if (logger->fp != stdin && logger->fp != stdout) {
+			fclose(logger->fp);
+		}
+	}
+}
+
 static void rotate(Logger *logger)
 {
 	char newpath[PATH_MAX];
@@ -177,17 +188,6 @@ static int logv(char *fmt,int datalen,va_list ap)
 
 	logger->lockerobj->Unlock(logger->lockerobj->locker);
 	return 0;
-}
-
-static void logclose(void)
-{
-	Logger *logger = &loggobj;
-
-	if (NULL != logger) {
-		if (logger->fp != stdin && logger->fp != stdout) {
-			fclose(logger->fp);
-		}
-	}
 }
 
 Logger *Logger_Create(int level,int rotate_size,char *name)

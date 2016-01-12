@@ -70,6 +70,7 @@ void DataList_Delete(DataList *list) {
 	if (list) {
 		DataList_Clear(list);
 		free(list);
+		list = NULL;
 	}
 }
 //--------------------------------------------------------------------------------------------------------
@@ -131,7 +132,6 @@ void *DataList_Removehead(DataList *list) {
 void *DataList_Removetail(DataList *list) {
 	void *data = NULL;
 	if (list->tail != NULL) {
-
 		DataNode *temp = list->tail;
 		list->tail = list->tail->prev;
 

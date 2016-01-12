@@ -77,17 +77,16 @@ int Decode(const char *data, const int len,char *_data)
 	return _len;
 }
 
-int readdata(ConnObj *connobj)
+int readdata(ConnObj *connobj,char *rdata,int len)
 {
 	char data[4096] = {0};
-	int  len = 0;
+	int  nlen = 0;
 
-	if (NULL != connobj && connobj->activity == SOCKET_CONNECTED && connobj->recvptr != NULL){
+	if (NULL != connobj && connobj->activity == SOCKET_CONNECTED && rdata!= NULL){
 		//log_info("fd:%d,read len:%d,addr:%p,info:%s",connobj->fd,connobj->recvlen,connobj,connobj->recvptr);
-		len = Decode((char *)connobj->recvptr,connobj->recvlen,data);
+		nlen = Decode(rdata,len,data);
         log_info("ip:%s,port:%d",connobj->ip,connobj->port);
-		loghex(len,data);
-
+		loghex(nlen,data);
 	    ServerSend(serverobj,connobj,"hello,world\n",strlen("hello,world\n"));
 	}
 

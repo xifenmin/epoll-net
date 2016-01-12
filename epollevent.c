@@ -41,14 +41,15 @@ void Epoll_Destory_Obj(EpollObj *epoll_obj)
     }
 }
 
-int Epoll_Event_AddConn(struct tagEpollBase *evb, struct tagConnObj  *conn)
+int Epoll_Event_AddConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events)
 {
 	int status;
 
 	if (evb == NULL || conn == NULL) {
 		 return -1;
 	}
-	evb->event->events   = (uint32_t) (EPOLLIN |EPOLLET);//| EPOLLOUT
+
+	evb->event->events   = (uint32_t) (EPOLLET | events);
 	evb->event->data.ptr = conn;
 
 	status = epoll_ctl(evb->epollhandle,EPOLL_CTL_ADD,conn->fd,evb->event);
@@ -87,12 +88,14 @@ int Epoll_Event_ModifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,in
     	return -1;
     }
 
-    if (events & EVENT_READ)
-    	events |= EPOLLIN;
-    if (events & EVENT_WRITE)
-    	events |= EPOLLOUT;
+    evb->event->events = EPOLLET;
 
-    evb->event->events = events | EPOLLET;
+    if (events & EVENT_READ)
+    	evb->event->events |= EPOLLIN;
+    if (events & EVENT_WRITE)
+    	evb->event->events |= EPOLLOUT;
+
+    evb->event->data.ptr = conn;
 
     status = epoll_ctl(evb->epollhandle, EPOLL_CTL_MOD,conn->fd,evb->event);
 
@@ -110,7 +113,7 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 	int events = 0;
 	int len    = 0;
 
-	ConnObj *_connobj = NULL;
+	ConnObj *_connobj    = NULL;
 	ServerObj *serverobj = (ServerObj *)_serverobj;
 
 	struct epoll_event *ev = NULL;
@@ -122,7 +125,6 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 	int fd_active_nums = epoll_wait(evb->epollhandle, evb->event,EPOLL_EVENTS_NUM, timeout);
 
 	for (; i < fd_active_nums; i++) {
-
 		ev = &evb->event[i];
 
 		if (ev->events & EPOLLOUT) {
@@ -130,7 +132,7 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 
 			if (evb->cb != NULL){
 				_connobj = ev->data.ptr;
-				evb->cb(serverobj, _connobj, events);
+				len = evb->cb(serverobj, _connobj, events);
 			}
 		}
 
@@ -139,23 +141,12 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 		}
 
 		if (ev->events & (EPOLLIN | EPOLLHUP)) {
-
 			events |= EVENT_READ;
-
 			if (evb->cb != NULL) {
-
 				_connobj = ev->data.ptr;
 				len = evb->cb(serverobj, _connobj, events);
-
-				if (len > 0) {
-					Locker_Lock(serverobj->lockerobj->locker);
-					DataQueue_Push(serverobj->rqueue, _connobj);
-					Locker_Unlock(serverobj->lockerobj->locker);
-					Locker_Post(serverobj->lockerobj->locker);
-				}
-			}
 		}
+	  }
 	}
-
 	return fd_active_nums;
 }

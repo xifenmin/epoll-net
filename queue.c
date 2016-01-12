@@ -22,6 +22,7 @@ void DataQueue_Clear(DataQueue *queue)
      if (queue){
          DataList_Delete(queue->list);
          free(queue);
+         queue = NULL;
      }
 }
 //--------------------------------------------------------------------------------------------------------
@@ -32,7 +33,7 @@ void DataQueue_Push(DataQueue *queue,void *data)
 //--------------------------------------------------------------------------------------------------------
 void *DataQueue_Pop(DataQueue *queue)
 {
-    return DataList_Removetail(queue->list);
+    return DataList_Removehead(queue->list);
 }
 //--------------------------------------------------------------------------------------------------------
 unsigned int DataQueue_Size(DataQueue *queue)

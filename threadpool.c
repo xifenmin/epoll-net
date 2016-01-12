@@ -36,7 +36,10 @@ static void *Threadpool_Run(void *threadpool_obj) {
 	for (;;) {
 
 		Locker_Lock(thread_pool->locker);
-		Locker_Condwait(thread_pool->locker);
+
+		while (DataQueue_Size(thread_pool->queue) <= 0) {
+			Locker_Condwait(thread_pool->locker);
+		}
 
 		threadpool_task = DataQueue_Pop(thread_pool->queue);
 
@@ -44,11 +47,12 @@ static void *Threadpool_Run(void *threadpool_obj) {
 			log_error("threadpool_run:thread pool task obj is null!!!");
 			break;
 		}
-
-		Locker_Unlock(thread_pool->locker);
 		log_info("thread func:%s,pid:%ld", threadpool_task->name,syscall(SYS_gettid));
 
 		(*(threadpool_task->cb))(threadpool_task->arg);
+
+		Locker_Signalall(thread_pool->locker);
+		Locker_Unlock(thread_pool->locker);
 	}
 
 	Locker_Unlock(thread_pool->locker);
@@ -97,8 +101,8 @@ int Threadpool_Addtask(Threadpool *thread_pool, callback cb,
 
 	Locker_Lock(thread_pool->locker);
 	DataQueue_Push(thread_pool->queue, (void *) threadpool_task);
-	Locker_Unlock(thread_pool->locker);
 	Locker_Signal(thread_pool->locker);
+	Locker_Unlock(thread_pool->locker);
 
 	return 0;
 }

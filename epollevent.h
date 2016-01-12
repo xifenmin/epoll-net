@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-typedef int (*epoll_addevent)(struct tagEpollBase *, struct tagConnObj *);
+typedef int (*epoll_addevent)(struct tagEpollBase *, struct tagConnObj *,int events);
 typedef int (*epoll_delevent)(struct tagEpollBase *, struct tagConnObj *);
 typedef int (*epoll_modifyevent)(struct tagEpollBase *, struct tagConnObj *,int events);
 typedef int (*epoll_waitevent)(struct tagEpollBase *,void  *,int timeout);
@@ -38,7 +38,7 @@ EpollObj *Epoll_Create_Obj(int events);
 void Epoll_Destory_Obj(EpollObj *epoll_obj);
 
 /*epoll 事件添加*/
-int Epoll_Event_AddConn(struct tagEpollBase *evb, struct tagConnObj  *conn);
+int Epoll_Event_AddConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events);
 /*epoll 事件删除*/
 int Epoll_Event_DelConn(struct tagEpollBase *evb, struct tagConnObj  *conn);
 /*epoll 修改事件*/

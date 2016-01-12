@@ -37,7 +37,6 @@ ServerObj * StartServer(char *ip,unsigned short port,ProcRead procread)
 
 			Threadpool_Addtask(serverobj->serverthread,&Server_Loop,
 					"Server_Loop", serverobj);
-
 		}
 	}
 
@@ -57,7 +56,6 @@ ServerObj *Server_Create(int events)
 		serverobj->lockerobj    = LockerObj_Create();
 		serverobj->connobj      = CreateNewConnObj();
 		serverobj->rqueue       = DataQueue_Create();
-		serverobj->squeue       = DataQueue_Create();
 		serverobj->serverthread = Threadpool_Create(1);/*Proactor 模式，单线程*/
 		serverobj->datathread   = Threadpool_Create(5);/*数据线程池，处理接收数据用的*/
 
@@ -121,7 +119,7 @@ int Server_Listen(ServerObj *serverobj)
 		goto sock_err;
 	}
 
-	serverobj->epollobj->add(serverobj->epollobj->epollbase,serverobj->connobj);
+	serverobj->epollobj->add(serverobj->epollobj->epollbase,serverobj->connobj,EPOLLIN);
 
 	return 0;
 
@@ -165,7 +163,7 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 		_connobj->nodelay(_connobj,1);
 		_connobj->noblock(_connobj,1);
 
-		if (serverobj->epollobj->add(serverobj->epollobj->epollbase,_connobj) !=0 ){/*设置客户端socket epoll事件*/
+		if (serverobj->epollobj->add(serverobj->epollobj->epollbase,_connobj,EPOLLIN) !=0 ){/*设置客户端socket epoll事件*/
            /*add fail*/
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);/*把连接对象，放回到连接池中*/
 			goto sock_err;
@@ -191,13 +189,12 @@ int  ServerSend(ServerObj *serverobj,ConnObj *connobj,char *data,int len)
 	char *dptr   = NULL;
 	int   result = 0;
 
-    if (NULL != connobj && serverobj != NULL && len > 0){
-    	Locker_Lock(serverobj->lockerobj->locker);
-    	dptr = CStr_Malloc((char *)data,len);
+    if (NULL != connobj && serverobj != NULL && len > 0 && connobj->activity == SOCKET_CONNECTED){
+
+     	dptr = CStr_Malloc((char *)data,len);
+
     	connobj->sendptr = (unsigned char *)dptr;
     	connobj->sendlen = len;
-    	Epoll_Event_ModifyConn(serverobj->epollobj->epollbase,connobj,EVENT_READ|EVENT_WRITE);
-    	Locker_Unlock(serverobj->lockerobj->locker);
     }
 
     return result;
@@ -205,8 +202,9 @@ int  ServerSend(ServerObj *serverobj,ConnObj *connobj,char *data,int len)
 
 void Server_Process(void *argv)
 {
-	ConnObj *_connobj    = NULL;
 	ServerObj *serverobj = (ServerObj *) argv;
+
+	Item *item = NULL;
 
 	for (;;) {
 
@@ -215,23 +213,21 @@ void Server_Process(void *argv)
 			Locker_Semwait(serverobj->lockerobj->locker);
 			Locker_Lock(serverobj->lockerobj->locker);
 
-		    if (DataQueue_Size(serverobj->rqueue) > 0) {
+			if (DataQueue_Size(serverobj->rqueue) > 0){
+				item = DataQueue_Pop(serverobj->rqueue);
 
-				_connobj = DataQueue_Pop(serverobj->rqueue);
-				Locker_Unlock(serverobj->lockerobj->locker);
-
-				if (NULL != _connobj) {
-					//回调用户接口函数
-					serverobj->procread(_connobj);
-
-					if(_connobj->recvptr != NULL){
-					   CStr_Free((char *)_connobj->recvptr);
-					   _connobj->recvptr = NULL;
-					}
-					continue;
+				if (item != NULL){
+					serverobj->procread(item->connobj,item->recvptr,item->recvlen);
+					Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, item->connobj,EVENT_WRITE|EPOLLERR|EPOLLONESHOT);
+					if (item->recvptr != NULL) {
+						CStr_Free(item->recvptr);
+						item->recvptr = NULL;
+				    }
+					free(item);
+					item = NULL;
 				}
 			}
-		    Locker_Unlock(serverobj->lockerobj->locker);
+			Locker_Unlock(serverobj->lockerobj->locker);
 		}
 	}
 }

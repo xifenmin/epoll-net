@@ -58,12 +58,12 @@ void Clear_EpollBase(EpollBase *evb)
 
 int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 {
-
-	int val = 0;
-	errno = 0;
+	int val       = 0;
+	errno         = 0;
 	socklen_t lon = sizeof(int);
-	int ret = 0;
+	int ret       = 0;
 
+	Item        *item = NULL;
 	ConnObj *_connobj = (ConnObj *)connobj;
 
 	ServerObj *serverobj = (ServerObj *)_serverobj;
@@ -107,14 +107,12 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 		recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
 
 		if (recvlen == 0){
-
 			Locker_Lock(serverobj->lockerobj->locker);
 			serverobj->epollobj->del(serverobj->epollobj->epollbase,_connobj);
 			_connobj->close(_connobj);
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);
 			Locker_Unlock(serverobj->lockerobj->locker);
 			log_debug("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
-
 			return 0;
 		}
 
@@ -136,26 +134,42 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 
 		datalen = recvlen;
 
-		_connobj->recvlen   = datalen;
-		_connobj->recvptr   = (unsigned char *)dptr;/*接收数据指针*/
-		_connobj->last_time = time(NULL);/*更新连接对象的时间*/
+		if (datalen > 0) {
+
+			item = (Item *) malloc(sizeof(struct tagConnItem));
+
+			if (item != NULL) {
+				item->connobj = _connobj;
+				item->recvptr = dptr;
+				item->recvlen = datalen;
+				Locker_Lock(serverobj->lockerobj->locker);
+				DataQueue_Push(serverobj->rqueue, item);
+				Locker_Post(serverobj->lockerobj->locker);
+				Locker_Unlock(serverobj->lockerobj->locker);
+			}
+		}
 	}
 
 	if (EVENT_WRITE & events) { /*检测到写事件*/
 
 		if (_connobj->sendptr != NULL && _connobj->sendlen > 0) {
 
-			datalen = _connobj->send(_connobj);
+			_connobj->send(_connobj);
+			datalen = _connobj->sendlen;
 			log_info("send data ip:%s,port:%d,data:%s,len:%d",_connobj->ip,_connobj->port,_connobj->sendptr,datalen);
 
-			Locker_Lock(serverobj->lockerobj->locker);
 			if (_connobj->sendptr != NULL) {
 				CStr_Free((char *) _connobj->sendptr);
 				_connobj->sendptr = NULL;
+				_connobj->sendlen = 0;
 			}
+
+			Locker_Lock(serverobj->lockerobj->locker);
+			Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, _connobj,EVENT_READ|EPOLLERR);
 			Locker_Unlock(serverobj->lockerobj->locker);
 		}
 	}
 
 	return datalen;
 }
+
