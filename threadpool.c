@@ -13,6 +13,7 @@
 struct tagThreadpool {
 	Locker *locker;
 	pthread_t *threadmgr;
+	pthread_attr_t thread_attr;
 	DataQueue *queue;
 	unsigned int thread_count;
 };
@@ -47,6 +48,7 @@ static void *Threadpool_Run(void *threadpool_obj) {
 			log_error("threadpool_run:thread pool task obj is null!!!");
 			break;
 		}
+
 		log_info("thread func:%s,pid:%ld", threadpool_task->name,syscall(SYS_gettid));
 
 		(*(threadpool_task->cb))(threadpool_task->arg);
@@ -168,6 +170,8 @@ Threadpool *Threadpool_Create(unsigned int thread_count) {
 		thread_pool->thread_count++;
 		pthread_detach(thread_pool->threadmgr[i]);
 	}
+
+	pthread_attr_setschedpolicy(&thread_pool->thread_attr,SCHED_FIFO);
 
 	return thread_pool;
 }

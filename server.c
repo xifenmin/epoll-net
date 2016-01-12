@@ -215,14 +215,16 @@ void Server_Process(void *argv)
 
 			if (DataQueue_Size(serverobj->rqueue) > 0){
 				item = DataQueue_Pop(serverobj->rqueue);
-
 				if (item != NULL){
+
 					serverobj->procread(item->connobj,item->recvptr,item->recvlen);
-					Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, item->connobj,EVENT_WRITE|EPOLLERR|EPOLLONESHOT);
+
 					if (item->recvptr != NULL) {
 						CStr_Free(item->recvptr);
 						item->recvptr = NULL;
 				    }
+
+					Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, item->connobj,EVENT_WRITE|EPOLLERR|EPOLLONESHOT);
 					free(item);
 					item = NULL;
 				}

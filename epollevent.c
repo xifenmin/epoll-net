@@ -127,7 +127,7 @@ int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 	for (; i < fd_active_nums; i++) {
 		ev = &evb->event[i];
 
-		if (ev->events & EPOLLOUT) {
+		if (ev->events & (EPOLLOUT|EPOLLHUP)) {
 			events |= EVENT_WRITE;
 
 			if (evb->cb != NULL){

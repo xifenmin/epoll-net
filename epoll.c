@@ -88,6 +88,12 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 	ret = getsockopt(_connobj->fd, SOL_SOCKET, SO_ERROR, (void *) &val, &lon);
 
 	if (ret == -1) {
+		Locker_Lock(serverobj->lockerobj->locker);
+		serverobj->epollobj->del(serverobj->epollobj->epollbase, _connobj);
+		_connobj->close(_connobj);
+		serverobj->connmgr->set(serverobj->connmgr, _connobj);
+		Locker_Unlock(serverobj->lockerobj->locker);
+		log_debug("push connobj to conn poll,fd:%d!!!\n", _connobj->fd);
 		log_error("connect getsockopt() errno %d, %s, fd %d", errno,strerror(errno), _connobj->fd);
 		return -1;
 	}
@@ -139,13 +145,16 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 			item = (Item *) malloc(sizeof(struct tagConnItem));
 
 			if (item != NULL) {
+
 				item->connobj = _connobj;
 				item->recvptr = dptr;
 				item->recvlen = datalen;
-				Locker_Lock(serverobj->lockerobj->locker);
+
+			    Locker_Lock(serverobj->lockerobj->locker);
 				DataQueue_Push(serverobj->rqueue, item);
 				Locker_Post(serverobj->lockerobj->locker);
 				Locker_Unlock(serverobj->lockerobj->locker);
+
 			}
 		}
 	}
@@ -156,6 +165,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 
 			_connobj->send(_connobj);
 			datalen = _connobj->sendlen;
+
 			log_info("send data ip:%s,port:%d,data:%s,len:%d",_connobj->ip,_connobj->port,_connobj->sendptr,datalen);
 
 			if (_connobj->sendptr != NULL) {
@@ -167,6 +177,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 			Locker_Lock(serverobj->lockerobj->locker);
 			Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, _connobj,EVENT_READ|EPOLLERR);
 			Locker_Unlock(serverobj->lockerobj->locker);
+
 		}
 	}
 
