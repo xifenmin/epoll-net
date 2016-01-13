@@ -158,10 +158,10 @@ static int logv(char *fmt,int datalen,va_list ap)
 		   b++;
 	   }
 
-	   len = vsnprintf(ptr, space,hex, ap);
-
+	   len = vsnprintf(ptr, space, hex, ap);
 	}else{
-	    len = vsnprintf(ptr, space, fmt, ap);
+
+	   len = vsnprintf(ptr, space, fmt, ap);
 	}
 
 	if (len < 0) {
@@ -185,7 +185,6 @@ static int logv(char *fmt,int datalen,va_list ap)
 	if (logger->rotatesize > 0 && logger->wcurr > logger->rotatesize) {
 		rotate(logger);
 	}
-
 	logger->lockerobj->Unlock(logger->lockerobj->locker);
 	return 0;
 }
@@ -287,7 +286,7 @@ int logwarn(int level,char *fmt, ...)
 	return ret;
 }
 
-int loginfo(int level,char *fmt, ...)
+int loginfo(int level,char *fmt,...)
 {
 	Logger *logger = &loggobj;
 

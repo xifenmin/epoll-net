@@ -22,8 +22,6 @@ extern "C" {
 		logwarn(LEVEL_WARN,  "%s(%d): " fmt, __FILE__, __LINE__, ##args)
 #define log_error(fmt, args...)	\
 		logerror(LEVEL_ERROR, "%s(%d): " fmt, __FILE__, __LINE__, ##args)
-#define log_hex(len,fmt,args...)	\
-		loghex(len,fmt,__FILE__, __LINE__, ##args)
 
 enum LOGEVEL
 {

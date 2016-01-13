@@ -29,7 +29,6 @@ int sendData(ConnObj *conntobj) {
 
 	int ret     = 0;
 	int len     = 0;
-	int sendlen = 0;
 
 	if (NULL == conntobj) {
 		return -1;
@@ -39,7 +38,7 @@ int sendData(ConnObj *conntobj) {
 
 	ret = write(conntobj->fd,conntobj->sendptr,len);
 
-	return sendlen;
+	return ret;
 }
 
 int readData(ConnObj *conntobj,unsigned char *ptr,int len)

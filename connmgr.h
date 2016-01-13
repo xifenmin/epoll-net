@@ -6,7 +6,6 @@
  *       Email: xifengming@vip.sina.com
  *    Comments: socket conn pool manage
  *********************************************/
-
 #ifndef _CONN_MGR_H
 #define _CONN_MGR_H
 

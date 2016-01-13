@@ -225,6 +225,7 @@ void Server_Process(void *argv)
 				    }
 
 					Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, item->connobj,EVENT_WRITE|EPOLLERR|EPOLLONESHOT);
+
 					free(item);
 					item = NULL;
 				}

@@ -150,11 +150,12 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 				item->recvptr = dptr;
 				item->recvlen = datalen;
 
+				_connobj->last_time = time(NULL);
+
 			    Locker_Lock(serverobj->lockerobj->locker);
 				DataQueue_Push(serverobj->rqueue, item);
 				Locker_Post(serverobj->lockerobj->locker);
 				Locker_Unlock(serverobj->lockerobj->locker);
-
 			}
 		}
 	}
@@ -163,8 +164,8 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 
 		if (_connobj->sendptr != NULL && _connobj->sendlen > 0) {
 
-			_connobj->send(_connobj);
-			datalen = _connobj->sendlen;
+			Locker_Lock(serverobj->lockerobj->locker);
+			datalen = _connobj->send(_connobj);
 
 			log_info("send data ip:%s,port:%d,data:%s,len:%d",_connobj->ip,_connobj->port,_connobj->sendptr,datalen);
 
@@ -174,10 +175,8 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 				_connobj->sendlen = 0;
 			}
 
-			Locker_Lock(serverobj->lockerobj->locker);
 			Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, _connobj,EVENT_READ|EPOLLERR);
 			Locker_Unlock(serverobj->lockerobj->locker);
-
 		}
 	}
 
