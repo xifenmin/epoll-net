@@ -33,9 +33,7 @@ struct tagConnObj {
 	int       activity;/*连接是否正常*/
 	char      ip[32];
 	unsigned short port;
-	unsigned char  *recvptr;/*接收数据指针*/
 	unsigned char  *sendptr;/*发送数据指针*/
-	unsigned int   recvlen;/*接收数据长度*/
 	unsigned int   sendlen;/*发送数据长度*/
 	SendData       send;
 	ReadData       recv;

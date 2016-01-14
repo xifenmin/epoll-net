@@ -55,6 +55,7 @@ static void *Threadpool_Run(void *threadpool_obj) {
 
 		Locker_Signalall(thread_pool->locker);
 		Locker_Unlock(thread_pool->locker);
+
 	}
 
 	Locker_Unlock(thread_pool->locker);

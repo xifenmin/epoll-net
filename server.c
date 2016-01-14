@@ -21,6 +21,7 @@ ServerObj * StartServer(char *ip,unsigned short port,ProcRead procread)
 	ServerObj *serverobj = NULL;
 
 	if (serverobj == NULL) {
+
 		serverobj = Server_Create(1024);
 
 		if (NULL != serverobj) {
@@ -193,7 +194,7 @@ int  ServerSend(ServerObj *serverobj,ConnObj *connobj,char *data,int len)
 
      	dptr = CStr_Malloc((char *)data,len);
 
-    	connobj->sendptr = (unsigned char *)dptr;
+     	connobj->sendptr = (unsigned char *)dptr;
     	connobj->sendlen = len;
     }
 
@@ -223,8 +224,8 @@ void Server_Process(void *argv)
 						CStr_Free(item->recvptr);
 						item->recvptr = NULL;
 				    }
-
-					Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, item->connobj,EVENT_WRITE|EPOLLERR|EPOLLONESHOT);
+					//EPOLLONESHOT
+					Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, item->connobj,EVENT_WRITE|EPOLLERR);
 
 					free(item);
 					item = NULL;

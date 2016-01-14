@@ -102,7 +102,6 @@ void  connobjReset(ConnObj *connobj)
 		connobj->activity  = SOCKET_CONNCLOSED;
 		connobj->send      = sendData;
 		connobj->sendlen   = 0;
-		connobj->recvlen   = 0;
 		connobj->recv      = readData;
 		connobj->close     = closeConnObj;
 		connobj->nodelay   = noDelay;

@@ -19,7 +19,6 @@ ConnObj *CreateNewConnObj(void)
 
 	if (connobj != NULL){
 		connobj->sendptr = NULL;
-		connobj->recvptr = NULL;
 	}
 
 	return connobj;

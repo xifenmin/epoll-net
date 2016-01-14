@@ -156,6 +156,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 				DataQueue_Push(serverobj->rqueue, item);
 				Locker_Post(serverobj->lockerobj->locker);
 				Locker_Unlock(serverobj->lockerobj->locker);
+
 			}
 		}
 	}
@@ -176,6 +177,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 			}
 
 			Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, _connobj,EVENT_READ|EPOLLERR);
+
 			Locker_Unlock(serverobj->lockerobj->locker);
 		}
 	}
