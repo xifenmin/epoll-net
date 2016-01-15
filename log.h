@@ -23,6 +23,9 @@ extern "C" {
 #define log_error(fmt, args...)	\
 		logerror(LEVEL_ERROR, "%s(%d): " fmt, __FILE__, __LINE__, ##args)
 
+#define log_hex(addr,port,data,datalen,fmt,args...) \
+		loghex(data,datalen,"addr:%s,port:%d,%s",addr,port,fmt,##args)
+
 enum LOGEVEL
 {
    LEVEL_NONE = 0,
@@ -43,7 +46,7 @@ int logdebug(int level,char *fmt, ...);
 int logwarn(int level,char *fmt, ...);
 int logwrite(int level,char *fmt, ...);
 int loginfo(int level,char *fmt, ...);
-int loghex(int datalen,char *fmt,...);
+int loghex(char *data,int datalen,char *fmt,...);
 
 #ifdef __cplusplus
 }

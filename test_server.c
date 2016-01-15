@@ -80,13 +80,12 @@ int Decode(const char *data, const int len,char *_data)
 int readdata(ConnObj *connobj,char *rdata,int len)
 {
 	char data[4096] = {0};
-	int  nlen = 0;
+	int  nlen       = 0;
 
 	if (NULL != connobj && connobj->activity == SOCKET_CONNECTED && rdata!= NULL){
 		//log_info("fd:%d,read len:%d,addr:%p,info:%s",connobj->fd,connobj->recvlen,connobj,connobj->recvptr);
 		nlen = Decode(rdata,len,data);
-        log_info("ip:%s,port:%d",connobj->ip,connobj->port);
-		loghex(nlen,data);
+		log_hex(connobj->ip,connobj->port,data,nlen,"Recv:","");
 	    ServerSend(serverobj,connobj,"hello,world\n",strlen("hello,world\n"));
 	}
 

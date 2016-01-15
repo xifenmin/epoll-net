@@ -104,12 +104,12 @@ static void rotate(Logger *logger)
 	logger->wcurr = 0;
 }
 
-static int logv(char *fmt,int datalen,va_list ap)
+static int logv(char *fmt,char *data,int datalen,va_list ap)
 {
 	Logger *logger = &loggobj;
 
 	const char hex_chars[] = "0123456789ABCDEF";
-	unsigned char *b = (unsigned char *)fmt;
+	unsigned char *b = (unsigned char *)data;
 	unsigned char *e = b + datalen;
 
 	if (NULL == logger)
@@ -119,13 +119,15 @@ static int logv(char *fmt,int datalen,va_list ap)
 	char hex[LOG_BUF_LEN] = {0};
 
 	int len;
-	char *ptr = buf;
+	int offset = 0;
+	char *ptr  = buf;
+
 	time_t time;
 	struct timeval tv;
 	struct tm *tm;
 	int space = 0;
 
-	unsigned char index = 0;
+	unsigned int index = 0;
 
 	gettimeofday(&tv, NULL);
 
@@ -144,6 +146,11 @@ static int logv(char *fmt,int datalen,va_list ap)
 
 	ptr += len;
 
+	if (logger->level == LEVEL_HEX){
+		offset = vsnprintf(ptr,1024,fmt,ap);
+		ptr += offset;
+	}
+
 	memcpy(ptr, getLevelName(logger->level), LEVEL_NAME_LEN);
 	ptr += LEVEL_NAME_LEN;
 
@@ -158,10 +165,10 @@ static int logv(char *fmt,int datalen,va_list ap)
 		   b++;
 	   }
 
-	   len = vsnprintf(ptr, space, hex, ap);
+	   memcpy(ptr,hex,index);
+	   len = index;
 	}else{
-
-	   len = vsnprintf(ptr, space, fmt, ap);
+		 len = vsnprintf(ptr, space,fmt,ap);
 	}
 
 	if (len < 0) {
@@ -247,7 +254,7 @@ int logerror(int level,char *fmt, ...)
 	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
-	ret = logv(fmt,0,ap);
+	ret = logv(fmt,NULL,0,ap);
 	va_end(ap);
 	return ret;
 }
@@ -263,7 +270,7 @@ int logdebug(int level,char *fmt, ...)
 	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
-	ret = logv(fmt,0,ap);
+	ret = logv(fmt,NULL,0,ap);
 	va_end(ap);
 
 	return ret;
@@ -281,7 +288,7 @@ int logwarn(int level,char *fmt, ...)
 	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
-	ret = logv(fmt,0,ap);
+	ret = logv(fmt,NULL,0,ap);
 	va_end(ap);
 	return ret;
 }
@@ -297,13 +304,13 @@ int loginfo(int level,char *fmt,...)
 	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
-	ret = logv(fmt,0,ap);
+	ret = logv(fmt,NULL,0,ap);
 	va_end(ap);
 
 	return ret;
 }
 
-int loghex(int datalen,char *fmt,...)
+int loghex(char *data,int datalen,char *fmt,...)
 {
 	Logger *logger = &loggobj;
 
@@ -315,7 +322,7 @@ int loghex(int datalen,char *fmt,...)
 	setlevel(LEVEL_HEX);
 	va_list ap;
 	va_start(ap,fmt);
-	ret = logv(fmt,datalen,ap);
+	ret = logv(fmt,data,datalen,ap);
 	va_end(ap);
 
 	return ret;
