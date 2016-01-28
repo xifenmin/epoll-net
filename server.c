@@ -224,6 +224,7 @@ void Server_Process(void *argv)
 						CStr_Free(item->recvptr);
 						item->recvptr = NULL;
 				    }
+
 					//EPOLLONESHOT
 					Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, item->connobj,EVENT_WRITE|EPOLLERR);
 

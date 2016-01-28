@@ -136,7 +136,6 @@ struct tagConnObj *getConn(struct tagConntMgr *connmgr) {
 		_connobj = DataQueue_Pop(connmgr->queue);
 
 		if (NULL == _connobj){
-
 			_connobj = CreateNewConnObj();/*建立一个新的连接对象*/
 			connobjReset(_connobj);
 		}

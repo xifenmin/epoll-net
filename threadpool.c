@@ -71,6 +71,7 @@ int Threadpool_Free(Threadpool *thread_pool) {
 	}
 
 	if (thread_pool->threadmgr) {
+
 		free(thread_pool->threadmgr);
 		DataQueue_Clear(thread_pool->queue);
 		Locker_Clear(thread_pool->locker);

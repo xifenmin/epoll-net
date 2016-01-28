@@ -177,7 +177,6 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 			}
 
 			Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, _connobj,EVENT_READ|EPOLLERR);
-
 			Locker_Unlock(serverobj->lockerobj->locker);
 		}
 	}
