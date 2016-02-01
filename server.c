@@ -165,7 +165,7 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 		_connobj->nodelay(_connobj,1);
 		_connobj->noblock(_connobj,1);
 
-		if (serverobj->epollobj->add(serverobj->epollobj->epollbase,_connobj,EPOLLIN) !=0 ){/*设置客户端socket epoll事件*/
+		if (serverobj->epollobj->add(serverobj->epollobj->epollbase,_connobj,EPOLLIN|EPOLLRDHUP) !=0 ){/*设置客户端socket epoll事件*/
            /*add fail*/
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);/*把连接对象，放回到连接池中*/
 			goto sock_err;
@@ -227,7 +227,7 @@ void Server_Process(void *argv)
 				    }
 
 					//EPOLLONESHOT
-					Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, item->connobj,EVENT_WRITE|EPOLLERR);
+					Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, item->connobj,EVENT_WRITE|EPOLLERR|EPOLLRDHUP);
 
 					free(item);
 					item = NULL;

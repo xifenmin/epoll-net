@@ -88,6 +88,19 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 	ret = getsockopt(_connobj->fd, SOL_SOCKET, SO_ERROR, (void *) &val, &lon);
 
 	if (ret == -1) {
+		Locker_Lock(serverobj->lockerobj->locker);
+
+		if (_connobj->sendptr != NULL) {
+			CStr_Free((char *) _connobj->sendptr);
+			_connobj->sendptr = NULL;
+			_connobj->sendlen = 0;
+		}
+
+		serverobj->epollobj->del(serverobj->epollobj->epollbase,_connobj);
+		_connobj->close(_connobj);
+		serverobj->connmgr->set(serverobj->connmgr,_connobj);
+		Locker_Unlock(serverobj->lockerobj->locker);
+		log_debug("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
 		return ret;
 	}
 
@@ -154,7 +167,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 
 	if (EVENT_WRITE & events) { /*检测到写事件*/
 
-		if (_connobj->sendptr != NULL && _connobj->sendlen > 0) {
+		if (_connobj->sendptr != NULL && _connobj->sendlen > 0 ) {
 
 			Locker_Lock(serverobj->lockerobj->locker);
 			datalen = _connobj->send(_connobj);
@@ -167,7 +180,13 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 				_connobj->sendlen = 0;
 			}
 
-			Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, _connobj,EVENT_READ|EPOLLERR);
+			ret = Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, _connobj,EVENT_READ|EPOLLERR);
+
+			if (ret < 0){
+				CStr_Free((char *) _connobj->sendptr);
+				_connobj->sendptr = NULL;
+				_connobj->sendlen = 0;
+			}
 			Locker_Unlock(serverobj->lockerobj->locker);
 		}
 	}
