@@ -53,6 +53,7 @@ ServerObj *Server_Create(int events)
 	if (NULL != serverobj){
 
 		serverobj->epollobj     = Epoll_Create_Obj(events);
+		serverobj->dynamicarray = DynamicArray_Create(1,sizeof(Item));
 		serverobj->connmgr      = ConnMgr_Create();
 		serverobj->lockerobj    = LockerObj_Create();
 		serverobj->connobj      = CreateNewConnObj();

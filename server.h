@@ -6,7 +6,6 @@
  *       Email: xifengming@vip.sina.com
  *    Comments: socket server
  *********************************************/
-
 #ifndef _SERVER_H
 #define _SERVER_H
 
@@ -15,6 +14,7 @@
 #include "threadpool.h"
 #include "connmgr.h"
 #include "epollevent.h"
+#include "array.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,12 +23,13 @@ extern "C" {
 struct tagServerObj
 {
 	struct tagEpollObj    *epollobj;
-	ConnMgr     *connmgr;/*server 端连接池，管理客户端连接*/
-	ConnObj     *connobj;/*server 端连接描述符*/
-	LockerObj   *lockerobj;/*接收队列锁*/
-	DataQueue   *rqueue;/*接收队列*/
-	Threadpool  *serverthread;//主 server 线程池
-	Threadpool  *datathread;//处理接收数据  线程池
+	DynamicArray *dynamicarray;/*动态数组*/
+	ConnMgr      *connmgr;/*server 端连接池，管理客户端连接*/
+	ConnObj      *connobj;/*server 端连接描述符*/
+	LockerObj    *lockerobj;/*接收队列锁*/
+	DataQueue    *rqueue;/*接收队列*/
+	Threadpool   *serverthread;//主 server 线程池
+	Threadpool   *datathread;//处理接收数据  线程池
 	ProcRead     procread;/*客户端回调*/
 };
 

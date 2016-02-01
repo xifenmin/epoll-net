@@ -6,7 +6,7 @@
 
 DynamicArray *DynamicArray_Create(unsigned int ncount,unsigned int itemsize)
 {
-	DynamicArray *dynamic_array = NULL;
+	DynamicArray *dynamic_array    = NULL;
 	dynamic_array = (DynamicArray *)malloc(sizeof(DynamicArray));
 
 	if (NULL == dynamic_array){
