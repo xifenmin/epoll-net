@@ -22,8 +22,8 @@ extern "C" {
 
 struct tagServerObj
 {
-	struct tagEpollObj    *epollobj;
-	DynamicArrayInterface *dynamicarray_interface;/*动态数组*/
+	struct tagEpollInterface    *epollInterface;
+	DynamicArrayInterface *dynamicarrayInterface;/*动态数组*/
 	ConnMgr               *connmgr;/*server 端连接池，管理客户端连接*/
 	ConnObj               *connobj;/*server 端连接描述符*/
 	LockerInterface       *lockerInterface;/*接收队列锁*/

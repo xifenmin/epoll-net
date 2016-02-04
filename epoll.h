@@ -29,10 +29,10 @@ struct tagEpollBase
 
 typedef struct tagEpollBase EpollBase;
 
-EpollBase *Init_EpollBase(int events);
-void  Clear_EpollBase(EpollBase *evb);
+EpollBase *epollBase_init(int events);
+void  epollBase_destory(EpollBase *evb);
 /*epoll_wait 到来时，回调接口*/
-int Epoll_Event_Callback(void *_serverobj,void *_conobj,int events);
+int epollEvent_callback(void *_serverobj,void *_conobj,int events);
 
 #ifdef __cplusplus
 }

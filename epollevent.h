@@ -23,28 +23,34 @@ typedef int (*epoll_addevent)(struct tagEpollBase *, struct tagConnObj *,int eve
 typedef int (*epoll_delevent)(struct tagEpollBase *, struct tagConnObj *);
 typedef int (*epoll_modifyevent)(struct tagEpollBase *, struct tagConnObj *,int events);
 typedef int (*epoll_waitevent)(struct tagEpollBase *,void  *,int timeout);
+typedef void (*epoll_clearevent)(struct tagEpollBase *);
 
-struct tagEpollObj
+struct tagEpollInterface
 {
 	struct tagEpollBase  *epollbase;
 	epoll_addevent       add;
 	epoll_delevent       del;
 	epoll_modifyevent    modify;
 	epoll_waitevent      wait;
+	epoll_clearevent     clear;
 };
-typedef struct tagEpollObj  EpollObj;
 
-EpollObj *Epoll_Create_Obj(int events);
-void Epoll_Destory_Obj(EpollObj *epoll_obj);
+typedef struct tagEpollInterface  EpollInterface;
+
+EpollInterface *EpollInterface_Create(int events);
+
+void EpollInterface_Destory(EpollInterface *epoll_interface);
 
 /*epoll 事件添加*/
-int Epoll_Event_AddConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events);
+int epollEvent_addConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events);
 /*epoll 事件删除*/
-int Epoll_Event_DelConn(struct tagEpollBase *evb, struct tagConnObj  *conn);
+int epollEvent_delConn(struct tagEpollBase *evb, struct tagConnObj  *conn);
 /*epoll 修改事件*/
-int Epoll_Event_ModifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events /*事件*/);
+int epollEvent_modifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events /*事件*/);
 /*epoll wait*/
-int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout);
+int epollEvent_wait(struct tagEpollBase *evb,void *_serverobj,int timeout);
+
+void epollEvent_clear(struct tagEpollBase *evb);
 
 #ifdef __cplusplus
 }

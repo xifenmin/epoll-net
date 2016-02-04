@@ -15,33 +15,41 @@
 #include "server.h"
 #include "cstr.h"
 
-EpollObj *Epoll_Create_Obj(int events)
+EpollInterface *EpollInterface_Create(int events)
 {
-	EpollObj *epoll_obj = NULL;
-	epoll_obj = (EpollObj *)malloc(sizeof(EpollObj));
+	EpollInterface *epoll_interface = NULL;
+	epoll_interface = (EpollInterface *)malloc(sizeof(EpollInterface));
 
-	if (NULL != epoll_obj){
+	if (NULL != epoll_interface){
 
-		epoll_obj->epollbase = Init_EpollBase(events);
-		epoll_obj->add       = Epoll_Event_AddConn;
-		epoll_obj->del       = Epoll_Event_DelConn;
-		epoll_obj->modify    = Epoll_Event_ModifyConn;
-		epoll_obj->wait      = Epoll_Event_Wait;
+		epoll_interface->epollbase = epollBase_init(events);
+		epoll_interface->add       = epollEvent_addConn;
+		epoll_interface->del       = epollEvent_delConn;
+		epoll_interface->modify    = epollEvent_modifyConn;
+		epoll_interface->wait      = epollEvent_wait;
+		epoll_interface->clear     = epollEvent_clear;
 	}
 
-	return epoll_obj;
+	return epoll_interface;
 }
 
-void Epoll_Destory_Obj(EpollObj *epoll_obj)
+void EpollInterface_Destory(EpollInterface *epoll_interface)
 {
-    if (epoll_obj != NULL){
-    	Clear_EpollBase(epoll_obj->epollbase);
-    	free(epoll_obj);
-    	epoll_obj = NULL;
+    if (epoll_interface != NULL){
+    	epollEvent_clear(epoll_interface->epollbase);
+    	free(epoll_interface);
+    	epoll_interface = NULL;
     }
 }
 
-int Epoll_Event_AddConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events)
+void epollEvent_clear(struct tagEpollBase *evb)
+{
+	if (evb != NULL){
+		epollBase_destory(evb);
+	}
+}
+
+int epollEvent_addConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events)
 {
 	int status;
 
@@ -62,7 +70,7 @@ int Epoll_Event_AddConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int e
 	return status;
 }
 
-int Epoll_Event_DelConn(struct tagEpollBase *evb, struct tagConnObj  *conn)
+int epollEvent_delConn(struct tagEpollBase *evb, struct tagConnObj  *conn)
 {
 	int status;
 
@@ -80,7 +88,7 @@ int Epoll_Event_DelConn(struct tagEpollBase *evb, struct tagConnObj  *conn)
 	return status;
 }
 
-int Epoll_Event_ModifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events/*事件*/)
+int epollEvent_modifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int events/*事件*/)
 {
 	int status = 0;
 
@@ -107,7 +115,7 @@ int Epoll_Event_ModifyConn(struct tagEpollBase *evb, struct tagConnObj  *conn,in
     return status;
 }
 
-int Epoll_Event_Wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
+int epollEvent_wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
  {
 	int i = 0;
 	int events = 0;

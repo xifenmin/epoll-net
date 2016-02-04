@@ -52,8 +52,8 @@ ServerObj *Server_Create(int events)
 
 	if (NULL != serverobj){
 
-		serverobj->epollobj               = Epoll_Create_Obj(events);
-		serverobj->dynamicarray_interface = DynamicArrayInterface_Create(1,sizeof(Item));
+		serverobj->epollInterface         = EpollInterface_Create(events);
+		serverobj->dynamicarrayInterface  = DynamicArrayInterface_Create(1,sizeof(Item));
 		serverobj->connmgr                = ConnMgr_Create();
 		serverobj->lockerInterface        = LockerInterface_Create();
 		serverobj->connobj                = CreateNewConnObj();
@@ -78,8 +78,9 @@ void Server_Clear(ServerObj *serverobj)
     		free(serverobj->connobj);
     		serverobj->connobj = NULL;
     	}
+
     	serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
-    	Epoll_Destory_Obj(serverobj->epollobj);
+    	EpollInterface_Destory(serverobj->epollInterface);
     }
 }
 
@@ -121,7 +122,7 @@ int Server_Listen(ServerObj *serverobj)
 		goto sock_err;
 	}
 
-	serverobj->epollobj->add(serverobj->epollobj->epollbase,serverobj->connobj,EPOLLIN);
+	serverobj->epollInterface->add(serverobj->epollInterface->epollbase,serverobj->connobj,EPOLLIN);
 
 	return 0;
 
@@ -165,7 +166,7 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 		_connobj->nodelay(_connobj,1);
 		_connobj->noblock(_connobj,1);
 
-		if (serverobj->epollobj->add(serverobj->epollobj->epollbase,_connobj,EPOLLIN|EPOLLRDHUP) !=0 ){/*设置客户端socket epoll事件*/
+		if (serverobj->epollInterface->add(serverobj->epollInterface->epollbase,_connobj,EPOLLIN|EPOLLRDHUP) !=0 ){/*设置客户端socket epoll事件*/
            /*add fail*/
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);/*把连接对象，放回到连接池中*/
 			goto sock_err;
@@ -228,8 +229,7 @@ void Server_Process(void *argv)
 				    }
 
 					//EPOLLONESHOT
-					Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, item->connobj,EVENT_WRITE|EPOLLERR|EPOLLRDHUP);
-
+					serverobj->epollInterface->modify(serverobj->epollInterface->epollbase,item->connobj,EVENT_WRITE|EPOLLERR|EPOLLRDHUP);
 					free(item);
 					item = NULL;
 				}
@@ -247,7 +247,7 @@ void Server_Loop(void *argv)
 	if (NULL != serverobj){
 
 		for(;;){
-			serverobj->epollobj->wait(serverobj->epollobj->epollbase,serverobj,1);
+			serverobj->epollInterface->wait(serverobj->epollInterface->epollbase,serverobj,1);
 		}
 	}
 }

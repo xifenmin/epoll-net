@@ -13,7 +13,7 @@
 #include "server.h"
 #include "cstr.h"
 
-EpollBase *Init_EpollBase(int events)
+EpollBase *epollBase_init(int events)
 {
 	EpollBase *evb = NULL;
 
@@ -37,14 +37,14 @@ EpollBase *Init_EpollBase(int events)
 
 	if (evb != NULL){
         evb->epollhandle = ephandle;
-        evb->cb          = Epoll_Event_Callback;
+        evb->cb          = epollEvent_callback;
         evb->event       = event;
 	}
 
 	return evb;
 }
 
-void Clear_EpollBase(EpollBase *evb)
+void epollBase_destory(EpollBase *evb)
 {
 	if (evb != NULL){
         close(evb->epollhandle);
@@ -56,7 +56,7 @@ void Clear_EpollBase(EpollBase *evb)
 	}
 }
 
-int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
+int epollEvent_callback(void *_serverobj,void *connobj,int events)
 {
 	int val       = 0;
 	errno         = 0;
@@ -97,7 +97,8 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 			_connobj->sendlen = 0;
 		}
 
-		serverobj->epollobj->del(serverobj->epollobj->epollbase,_connobj);
+		serverobj->epollInterface->del(serverobj->epollInterface->epollbase,_connobj);
+
 		_connobj->close(_connobj);
 		serverobj->connmgr->set(serverobj->connmgr,_connobj);
 
@@ -126,7 +127,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 		if (recvlen == 0){
 
 			serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
-			serverobj->epollobj->del(serverobj->epollobj->epollbase,_connobj);
+			serverobj->epollInterface->del(serverobj->epollInterface->epollbase,_connobj);
 			_connobj->close(_connobj);
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);
 			serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
@@ -188,7 +189,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 				_connobj->sendlen = 0;
 			}
 
-			ret = Epoll_Event_ModifyConn(serverobj->epollobj->epollbase, _connobj,EVENT_READ|EPOLLERR);
+			ret = serverobj->epollInterface->modify(serverobj->epollInterface->epollbase, _connobj,EVENT_READ|EPOLLERR);
 
 			if (ret < 0){
 				CStr_Free((char *) _connobj->sendptr);
