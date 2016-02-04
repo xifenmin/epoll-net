@@ -16,34 +16,34 @@ extern "C" {
 
 typedef struct tagLock Locker;
 
-struct tagLockerObj
+struct tagLockerInterface
 {
    Locker *locker;
-   int (*Lock)(struct tagLock *locker);
-   int (*Unlock)(struct tagLock *locker);
-   int (*Swait)(struct tagLock *locker);
-   int (*Post)(struct tagLock *locker);
-   int (*Cwait)(struct tagLock *locker);
-   int (*Signal)(struct tagLock *locker);
-   int (*Signalall)(struct tagLock *locker);
-   int (*Clear)(struct tagLock *locker);
+   int (*lock)(struct tagLock *locker);
+   int (*unlock)(struct tagLock *locker);
+   int (*swait)(struct tagLock *locker);
+   int (*post)(struct tagLock *locker);
+   int (*cwait)(struct tagLock *locker);
+   int (*signal)(struct tagLock *locker);
+   int (*signalall)(struct tagLock *locker);
+   int (*clear)(struct tagLock *locker);
 };
 
-typedef struct tagLockerObj LockerObj;
+typedef struct tagLockerInterface LockerInterface;
 
-LockerObj *LockerObj_Create(void);
-void LockerObj_Clear(LockerObj *locker_obj);
+LockerInterface *LockerInterface_Create(void);
+void LockerInterface_Destory(LockerInterface *locker_interface);
 
-Locker *InitLocker(void);
-int Locker_Lock(Locker *locker);
-int Locker_Unlock(Locker *locker);
-int Locker_Semwait(Locker *locker);
-int Locker_Post(Locker *locker);
-int Locker_Condwait(Locker *locker);
-int Locker_Signal(Locker *locker);
-int Locker_Signalall(Locker *locker);
-int Locker_Free(Locker *locker);
-int Locker_Clear(Locker *locker);
+Locker *locker_init(void);
+int locker_lock(Locker *locker);
+int locker_unlock(Locker *locker);
+int locker_semwait(Locker *locker);
+int locker_post(Locker *locker);
+int locker_condwait(Locker *locker);
+int locker_signal(Locker *locker);
+int locker_signalall(Locker *locker);
+int locker_free(Locker *locker);
+int locker_clear(Locker *locker);
 
 #ifdef __cplusplus
 }

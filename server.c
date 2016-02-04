@@ -52,14 +52,14 @@ ServerObj *Server_Create(int events)
 
 	if (NULL != serverobj){
 
-		serverobj->epollobj     = Epoll_Create_Obj(events);
-		serverobj->dynamicarray = DynamicArray_Create(1,sizeof(Item));
-		serverobj->connmgr      = ConnMgr_Create();
-		serverobj->lockerobj    = LockerObj_Create();
-		serverobj->connobj      = CreateNewConnObj();
-		serverobj->rqueue       = DataQueue_Create();
-		serverobj->serverthread = Threadpool_Create(1);/*Proactor 模式，单线程*/
-		serverobj->datathread   = Threadpool_Create(5);/*数据线程池，处理接收数据用的*/
+		serverobj->epollobj               = Epoll_Create_Obj(events);
+		serverobj->dynamicarray_interface = DynamicArrayInterface_Create(1,sizeof(Item));
+		serverobj->connmgr                = ConnMgr_Create();
+		serverobj->lockerInterface        = LockerInterface_Create();
+		serverobj->connobj                = CreateNewConnObj();
+		serverobj->rqueueInterface        = DataQueueInterface_Create();
+		serverobj->serverthread           = Threadpool_Create(1);/*Proactor 模式，单线程*/
+		serverobj->datathread             = Threadpool_Create(5);/*数据线程池，处理接收数据用的*/
 
 		serverobj->connmgr->reset(serverobj->connobj);/*初始化socket连接对象*/
 	}
@@ -72,13 +72,13 @@ void Server_Clear(ServerObj *serverobj)
     if (serverobj != NULL){
     	Threadpool_Destroy(serverobj->datathread);
     	Threadpool_Destroy(serverobj->serverthread);
-    	ConnMgr_Clear(serverobj->connmgr);
-    	Locker_Lock(serverobj->lockerobj->locker);
+    	ConnMgr_Destory(serverobj->connmgr);
+    	serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
     	if (serverobj->connobj != NULL){
     		free(serverobj->connobj);
     		serverobj->connobj = NULL;
     	}
-    	Locker_Unlock(serverobj->lockerobj->locker);
+    	serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
     	Epoll_Destory_Obj(serverobj->epollobj);
     }
 }
@@ -212,11 +212,12 @@ void Server_Process(void *argv)
 
 		if (NULL != serverobj) {
 
-			Locker_Semwait(serverobj->lockerobj->locker);
-			Locker_Lock(serverobj->lockerobj->locker);
+			serverobj->lockerInterface->swait(serverobj->lockerInterface->locker);
+			serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
 
-			if (DataQueue_Size(serverobj->rqueue) > 0){
-				item = DataQueue_Pop(serverobj->rqueue);
+			if (serverobj->rqueueInterface->size(serverobj->rqueueInterface->queue) > 0){
+				item = serverobj->rqueueInterface->pop(serverobj->rqueueInterface->queue);
+
 				if (item != NULL){
 
 					serverobj->procread(item->connobj,item->recvptr,item->recvlen);
@@ -233,7 +234,8 @@ void Server_Process(void *argv)
 					item = NULL;
 				}
 			}
-			Locker_Unlock(serverobj->lockerobj->locker);
+
+			serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
 		}
 	}
 }

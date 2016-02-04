@@ -11,10 +11,10 @@
 #include "queue.h"
 
 struct tagThreadpool {
-	Locker *locker;
+	LockerInterface *lockerInterface;
 	pthread_t *threadmgr;
 	pthread_attr_t thread_attr;
-	DataQueue *queue;
+	DataQueueInterface *queueInterface;
 	unsigned int thread_count;
 };
 
@@ -36,13 +36,13 @@ static void *Threadpool_Run(void *threadpool_obj) {
 
 	for (;;) {
 
-		Locker_Lock(thread_pool->locker);
+		thread_pool->lockerInterface->lock(thread_pool->lockerInterface->locker);
 
-		while (DataQueue_Size(thread_pool->queue) <= 0) {
-			Locker_Condwait(thread_pool->locker);
+		while (thread_pool->queueInterface->size(thread_pool->queueInterface->queue) <= 0) {
+			thread_pool->lockerInterface->cwait(thread_pool->lockerInterface->locker);
 		}
 
-		threadpool_task = DataQueue_Pop(thread_pool->queue);
+		threadpool_task = thread_pool->queueInterface->pop(thread_pool->queueInterface->queue);
 
 		if (NULL == threadpool_task) {
 			log_error("threadpool_run:thread pool task obj is null!!!");
@@ -53,12 +53,12 @@ static void *Threadpool_Run(void *threadpool_obj) {
 
 		(*(threadpool_task->cb))(threadpool_task->arg);
 
-		Locker_Signalall(thread_pool->locker);
-		Locker_Unlock(thread_pool->locker);
+		thread_pool->lockerInterface->signalall(thread_pool->lockerInterface->locker);
+		thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
 
 	}
 
-	Locker_Unlock(thread_pool->locker);
+	thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
     pthread_exit(NULL);
 
 	return NULL;
@@ -73,8 +73,8 @@ int Threadpool_Free(Threadpool *thread_pool) {
 	if (thread_pool->threadmgr) {
 
 		free(thread_pool->threadmgr);
-		DataQueue_Clear(thread_pool->queue);
-		Locker_Clear(thread_pool->locker);
+		thread_pool->queueInterface->clear(thread_pool->queueInterface->queue);
+		thread_pool->lockerInterface->clear(thread_pool->lockerInterface->locker);
 	}
 
 	free(thread_pool);
@@ -103,10 +103,10 @@ int Threadpool_Addtask(Threadpool *thread_pool, callback cb,
 	threadpool_task->arg = arg;
 	memcpy(threadpool_task->name, name, strlen(name));
 
-	Locker_Lock(thread_pool->locker);
-	DataQueue_Push(thread_pool->queue, (void *) threadpool_task);
-	Locker_Signal(thread_pool->locker);
-	Locker_Unlock(thread_pool->locker);
+	thread_pool->lockerInterface->lock(thread_pool->lockerInterface->locker);
+	thread_pool->queueInterface->push(thread_pool->queueInterface->queue,(void *) threadpool_task);
+	thread_pool->lockerInterface->signal(thread_pool->lockerInterface->locker);
+	thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
 
 	return 0;
 }
@@ -119,11 +119,11 @@ int Threadpool_Destroy(Threadpool *thread_pool) {
 		return -1;
 	}
 
-	Locker_Lock(thread_pool->locker);
+	thread_pool->lockerInterface->lock(thread_pool->lockerInterface->locker);
 
-	if (!Locker_Signal(thread_pool->locker)) {
+	if (!thread_pool->lockerInterface->signal(thread_pool->lockerInterface->locker)) {
 		log_error("threadpool_destroy:Locker single all thread fail!!");
-		Locker_Unlock(thread_pool->locker);
+		thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
 		return -1;
 	}
 
@@ -133,7 +133,7 @@ int Threadpool_Destroy(Threadpool *thread_pool) {
 		}
 	}
 
-	Locker_Unlock(thread_pool->locker);
+	thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
 	Threadpool_Free(thread_pool);
 
 	return 0;
@@ -157,9 +157,9 @@ Threadpool *Threadpool_Create(unsigned int thread_count) {
 		return NULL;
 	}
 
-	thread_pool->locker = InitLocker();
-	thread_pool->queue  = DataQueue_Create();
-	thread_pool->thread_count = thread_count;
+	thread_pool->lockerInterface = LockerInterface_Create();
+	thread_pool->queueInterface  = DataQueueInterface_Create();
+	thread_pool->thread_count    = thread_count;
 
 	for (; i < thread_count; ++i) {
 

@@ -88,7 +88,8 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 	ret = getsockopt(_connobj->fd, SOL_SOCKET, SO_ERROR, (void *) &val, &lon);
 
 	if (ret == -1) {
-		Locker_Lock(serverobj->lockerobj->locker);
+
+		serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
 
 		if (_connobj->sendptr != NULL) {
 			CStr_Free((char *) _connobj->sendptr);
@@ -99,9 +100,13 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 		serverobj->epollobj->del(serverobj->epollobj->epollbase,_connobj);
 		_connobj->close(_connobj);
 		serverobj->connmgr->set(serverobj->connmgr,_connobj);
-		Locker_Unlock(serverobj->lockerobj->locker);
+
+		serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
+
 		log_debug("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
+
 		return ret;
+
 	}
 
 	if (val == 0) {
@@ -119,12 +124,15 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 		recvlen = _connobj->recv(_connobj, recvbuffer, sizeof(recvbuffer));
 
 		if (recvlen == 0){
-			Locker_Lock(serverobj->lockerobj->locker);
+
+			serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
 			serverobj->epollobj->del(serverobj->epollobj->epollbase,_connobj);
 			_connobj->close(_connobj);
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);
-			Locker_Unlock(serverobj->lockerobj->locker);
+			serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
+
 			log_debug("push connobj to conn poll,fd:%d!!!\n",_connobj->fd);
+
 			return 0;
 		}
 
@@ -157,10 +165,10 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 
 				_connobj->last_time = time(NULL);
 
-			    Locker_Lock(serverobj->lockerobj->locker);
-				DataQueue_Push(serverobj->rqueue, item);
-				Locker_Post(serverobj->lockerobj->locker);
-				Locker_Unlock(serverobj->lockerobj->locker);
+				serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
+				serverobj->rqueueInterface->push(serverobj->rqueueInterface->queue,item);
+				serverobj->lockerInterface->post(serverobj->lockerInterface->locker);
+				serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
 			}
 		}
 	}
@@ -169,7 +177,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 
 		if (_connobj->sendptr != NULL && _connobj->sendlen > 0 ) {
 
-			Locker_Lock(serverobj->lockerobj->locker);
+			serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
 			datalen = _connobj->send(_connobj);
 
 			log_info("send data ip:%s,port:%d,data:%s,len:%d",_connobj->ip,_connobj->port,_connobj->sendptr,datalen);
@@ -187,7 +195,7 @@ int Epoll_Event_Callback(void *_serverobj,void *connobj,int events)
 				_connobj->sendptr = NULL;
 				_connobj->sendlen = 0;
 			}
-			Locker_Unlock(serverobj->lockerobj->locker);
+			serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
 		}
 	}
 

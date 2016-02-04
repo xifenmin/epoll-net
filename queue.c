@@ -4,9 +4,34 @@
 struct tagDataQueue{
      DataList *list;
 };
-
 //--------------------------------------------------------------------------------------------------------
-DataQueue *DataQueue_Create(void)
+DataQueueInterface *DataQueueInterface_Create(void)
+{
+	DataQueueInterface *dataqueue_interface = NULL;
+
+	dataqueue_interface = (DataQueueInterface *)malloc(sizeof(DataQueueInterface));
+
+	if (NULL != dataqueue_interface){
+		dataqueue_interface->queue = dataQueue_init();
+		dataqueue_interface->push  = dataQueue_push;
+		dataqueue_interface->pop   = dataQueue_pop;
+		dataqueue_interface->size  = dataQueue_size;
+		dataqueue_interface->clear = dataQueue_clear;
+	}
+
+	return dataqueue_interface;
+}
+
+void DataQueueInterface_Destory(DataQueueInterface *dataqueue_interface)
+{
+    if (dataqueue_interface != NULL){
+    	dataqueue_interface->clear(dataqueue_interface->queue);
+        free(dataqueue_interface);
+        dataqueue_interface = NULL;
+    }
+}
+
+DataQueue *dataQueue_init(void)
 {
    DataQueue *queue = (DataQueue *)malloc(sizeof(DataQueue));
 
@@ -17,7 +42,7 @@ DataQueue *DataQueue_Create(void)
    return queue;
 }
 //--------------------------------------------------------------------------------------------------------
-void DataQueue_Clear(DataQueue *queue)
+void dataQueue_clear(DataQueue *queue)
 {
      if (queue){
          DataList_Delete(queue->list);
@@ -26,17 +51,17 @@ void DataQueue_Clear(DataQueue *queue)
      }
 }
 //--------------------------------------------------------------------------------------------------------
-void DataQueue_Push(DataQueue *queue,void *data)
+void dataQueue_push(DataQueue *queue,void *data)
 {
      DataList_Addtail(queue->list,data);
 }
 //--------------------------------------------------------------------------------------------------------
-void *DataQueue_Pop(DataQueue *queue)
+void *dataQueue_pop(DataQueue *queue)
 {
     return DataList_Removehead(queue->list);
 }
 //--------------------------------------------------------------------------------------------------------
-unsigned int DataQueue_Size(DataQueue *queue)
+unsigned int dataQueue_size(DataQueue *queue)
 {
     return DataList_Getcount(queue->list);
 }

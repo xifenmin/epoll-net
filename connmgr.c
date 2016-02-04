@@ -57,12 +57,11 @@ ConnMgr *ConnMgr_Create(void) {
 	connmgr = (ConnMgr *) malloc(sizeof(ConnMgr));
 
 	if (NULL != connmgr) {
-
-		connmgr->queue     = DataQueue_Create();
-		connmgr->lockerobj = LockerObj_Create();
-		connmgr->set       = setConn;
-		connmgr->get       = getConn;
-		connmgr->reset     = connobjReset;
+		connmgr->queueInterface  = DataQueueInterface_Create();
+		connmgr->lockerInterface = LockerInterface_Create();
+		connmgr->set             = setConn;
+		connmgr->get             = getConn;
+		connmgr->reset           = connobjReset;
 	}
 
 	init_limit();
@@ -70,27 +69,28 @@ ConnMgr *ConnMgr_Create(void) {
 	return connmgr;
 }
 
-void ConnMgr_Clear(struct tagConntMgr *connmgr) {
+void ConnMgr_Destory(struct tagConntMgr *connmgr) {
+
 	int i = 0;
 	ConnObj *conntobj = NULL;
 
 	if (connmgr == NULL)
 		return;
 
-	int size = DataQueue_Size(connmgr->queue);
+	int size = connmgr->queueInterface->size(connmgr->queueInterface->queue);
 
-	connmgr->lockerobj->Lock(connmgr->lockerobj->locker);
+	connmgr->lockerInterface->lock(connmgr->lockerInterface->locker);
 
 	for (; i < size; i++) {
-		conntobj = DataQueue_Pop(connmgr->queue);
+		conntobj = connmgr->queueInterface->pop(connmgr->queueInterface->queue);
 		if (conntobj != NULL) {
 			free(conntobj);
 		}
 	}
 
-	DataQueue_Clear(connmgr->queue);
+	connmgr->queueInterface->clear(connmgr->queueInterface->queue);
+	connmgr->lockerInterface->unlock(connmgr->lockerInterface->locker);
 
-	connmgr->lockerobj->Unlock(connmgr->lockerobj->locker);
 	free(connmgr);
 }
 
@@ -116,12 +116,12 @@ void  connobjReset(ConnObj *connobj)
 int setConn(struct tagConntMgr *connmgr, struct tagConnObj *conntobj) {
 
 	if (connmgr != NULL) {
-		connmgr->lockerobj->Lock(connmgr->lockerobj->locker);
+		connmgr->lockerInterface->lock(connmgr->lockerInterface->locker);
 		if (NULL != conntobj) {
 			connobjReset(conntobj);
-			DataQueue_Push(connmgr->queue, conntobj);
+			connmgr->queueInterface->push(connmgr->queueInterface->queue,conntobj);
 		}
-		connmgr->lockerobj->Unlock(connmgr->lockerobj->locker);
+		connmgr->lockerInterface->unlock(connmgr->lockerInterface->locker);
 	}
 	return 0;
 }
@@ -132,17 +132,17 @@ struct tagConnObj *getConn(struct tagConntMgr *connmgr) {
 
 	if (connmgr != NULL) {
 
-		connmgr->lockerobj->Lock(connmgr->lockerobj->locker);
-		_connobj = DataQueue_Pop(connmgr->queue);
+		connmgr->lockerInterface->lock(connmgr->lockerInterface->locker);
+
+		_connobj = connmgr->queueInterface->pop(connmgr->queueInterface->queue);
 
 		if (NULL == _connobj){
 			_connobj = CreateNewConnObj();/*建立一个新的连接对象*/
 			connobjReset(_connobj);
 		}
 
-		connmgr->lockerobj->Unlock(connmgr->lockerobj->locker);
+		connmgr->lockerInterface->unlock(connmgr->lockerInterface->locker);
 	}
 
 	return _connobj;
 }
-

@@ -20,15 +20,31 @@ typedef int (*HashFun)(void *data, size_t len);
 
 typedef struct tagHashTable HashTable;
 
-HashTable *HashTable_Create(unsigned int size, HashFun hashfun,
+struct tagHashTableInterface
+{
+	HashTable *hash;
+	void (*push)(struct tagHashTable *hashtable, void *key, void *data);
+	void *(*pop)(struct tagHashTable *hashtable, void *key);
+	void *(*remove)(struct tagHashTable *hashtable,void *key);
+	float (*factor)(struct tagHashTable *);
+	void (*clear)(struct tagHashTable *queue);
+};
+
+typedef struct tagHashTableInterface HashTableInterface;
+
+HashTableInterface *HashTableInterface_Create(unsigned int size, HashFun hashfun,HashCmpFun hashcmp);
+
+void HashTableInterface_Destory(HashTableInterface *hashtable_interface);
+
+HashTable *hashTable_init(unsigned int size, HashFun hashfun,
 		HashCmpFun hashcmp);
 
-void HashTable_Clear(HashTable *hashtable);
-void *HashTable_Remove(HashTable *hashtable, void *key);
-float HashTable_Loadfactor(HashTable *hashtable);
+void hashTable_clear(HashTable *hashtable);
+void *hashTable_remove(HashTable *hashtable, void *key);
+float hashTable_loadfactor(HashTable *hashtable);
 
-void HashTable_Add(HashTable *hashtable, void *key, void *data);
-void *HashTable_Get(HashTable *hashtable, void *key);
+void hashTable_push(HashTable *hashtable, void *key, void *data);
+void *hashTable_pop(HashTable *hashtable, void *key);
 
 #ifdef __cplusplus
 }

@@ -12,41 +12,40 @@ struct tagLock
    pthread_cond_t  m_cond;
 };
 //-----------------------------------------------------------
-LockerObj *LockerObj_Create(void)
+LockerInterface *LockerInterface_Create(void)
 {
-    LockerObj *locker_obj = NULL;
+	LockerInterface *locker_interface = NULL;
 
-    locker_obj  = (LockerObj *)malloc(sizeof(LockerObj));
+	locker_interface  = (LockerInterface *)malloc(sizeof(LockerInterface));
 
-    if (NULL == locker_obj){
-    	log_error("LockerObj_Create:LockerObj malloc fail!!!");
+    if (NULL == locker_interface){
+    	log_error("LockerInterface_Create:LockerInterface malloc fail!!!");
         return NULL;
     }
 
-    locker_obj->locker    = InitLocker();
+    locker_interface->locker    = locker_init();
+    locker_interface->lock      = locker_lock;
+    locker_interface->unlock    = locker_unlock;
+    locker_interface->swait     = locker_semwait;
+    locker_interface->post      = locker_post;
+    locker_interface->cwait     = locker_condwait;
+    locker_interface->signal    = locker_signal;
+    locker_interface->signalall = locker_signalall;
+    locker_interface->clear     = locker_clear;
 
-    locker_obj->Lock      = Locker_Lock;
-    locker_obj->Unlock    = Locker_Unlock;
-    locker_obj->Swait     = Locker_Semwait;
-    locker_obj->Post      = Locker_Post;
-    locker_obj->Cwait     = Locker_Condwait;
-    locker_obj->Signal    = Locker_Signal;
-    locker_obj->Signalall = Locker_Signalall;
-    locker_obj->Clear     = Locker_Clear;
-
-    return locker_obj;
+    return locker_interface;
 }
 //-----------------------------------------------------------
-void LockerObj_Clear(LockerObj *locker_obj)
+void LockerInterface_Destory(LockerInterface *locker_interface)
 {
-    if (locker_obj != NULL){
-         locker_obj->Clear(locker_obj->locker);
-         free(locker_obj);
-         locker_obj = NULL;
+    if (locker_interface != NULL){
+    	locker_interface->clear(locker_interface->locker);
+        free(locker_interface);
+        locker_interface = NULL;
     }
 }
 //-----------------------------------------------------------
-Locker *InitLocker(void)
+Locker *locker_init(void)
 {
     Locker *locker = NULL;
     
@@ -64,7 +63,7 @@ Locker *InitLocker(void)
     return locker;
 }
 //-----------------------------------------------------------
-int  Locker_Lock(Locker *locker)
+int  locker_lock(Locker *locker)
 {
     if (NULL == locker){
        return -1;
@@ -73,7 +72,7 @@ int  Locker_Lock(Locker *locker)
     return (pthread_mutex_lock(&locker->m_mutex ) == 0);
 }
 //-----------------------------------------------------------
-int Locker_Unlock(Locker *locker)
+int locker_unlock(Locker *locker)
 {
     if (NULL == locker){
        return -1;
@@ -82,7 +81,7 @@ int Locker_Unlock(Locker *locker)
     return pthread_mutex_unlock(&locker->m_mutex ) == 0;
 }
 //-----------------------------------------------------------
-int  Locker_Semwait(Locker *locker)
+int  locker_semwait(Locker *locker)
 {
     if ( NULL == locker){
        return -1;
@@ -91,7 +90,7 @@ int  Locker_Semwait(Locker *locker)
     return sem_wait(&locker->m_sem ) == 0;
 }
 //-----------------------------------------------------------
-int Locker_Post(Locker *locker)
+int locker_post(Locker *locker)
 {
      if (NULL == locker){
          return -1;
@@ -100,7 +99,7 @@ int Locker_Post(Locker *locker)
      return sem_post(&locker->m_sem ) == 0;
 }
 //-----------------------------------------------------------
-int Locker_Condwait(Locker *locker)
+int locker_condwait(Locker *locker)
 {
     if (NULL == locker){
         return -1;
@@ -112,7 +111,7 @@ int Locker_Condwait(Locker *locker)
     return ret;
 }
 //-----------------------------------------------------------
-int Locker_Signal(Locker *locker)
+int locker_signal(Locker *locker)
 {
    if (NULL == locker){
         return -1;
@@ -121,7 +120,7 @@ int Locker_Signal(Locker *locker)
    return (pthread_cond_signal(&locker->m_cond) == 0);
 }
 //-----------------------------------------------------------
-int Locker_Signalall(Locker *locker)
+int locker_signalall(Locker *locker)
 {
    if (NULL == locker){
         return -1;
@@ -130,7 +129,7 @@ int Locker_Signalall(Locker *locker)
    return (pthread_cond_broadcast(&locker->m_cond) == 0);
 }
 //-----------------------------------------------------------
-int Locker_Free(Locker *locker)
+int locker_free(Locker *locker)
 {
     if (NULL == locker){
         return -1;
@@ -143,13 +142,13 @@ int Locker_Free(Locker *locker)
     return 0;
 }
 //-----------------------------------------------------------
-int  Locker_Clear(Locker *locker)
+int  locker_clear(Locker *locker)
 {
     if (NULL == locker){
         return -1;
     }
 
-    Locker_Free(locker);
+    locker_free(locker);
     free(locker);
 
     return 0;

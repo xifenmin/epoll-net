@@ -16,7 +16,35 @@ struct tagHashTable{
      HashNode     **buckets;
 };
 //-----------------------------------------------------------
-HashTable *HashTable_Create(unsigned int size,HashFun hashfun,HashCmpFun hashcmp)
+HashTableInterface *HashTableInterface_Create(unsigned int size, HashFun hashfun,HashCmpFun hashcmp)
+{
+	HashTableInterface *hashtable_interface = NULL;
+
+	hashtable_interface = (HashTableInterface *)malloc(sizeof(HashTableInterface));
+
+	if (NULL != hashtable_interface){
+
+		hashtable_interface->hash   = hashTable_init(size,hashfun,hashcmp);
+		hashtable_interface->push   = hashTable_push;
+		hashtable_interface->pop    = hashTable_pop;
+		hashtable_interface->remove = hashTable_remove;
+		hashtable_interface->clear  = hashTable_clear;
+		hashtable_interface->factor = hashTable_loadfactor;
+	}
+
+	return hashtable_interface;
+}
+
+void HashTableInterface_Destory(HashTableInterface *hashtable_interface)
+{
+    if (hashtable_interface != NULL){
+    	hashtable_interface->clear(hashtable_interface->hash);
+         free(hashtable_interface);
+         hashtable_interface = NULL;
+    }
+}
+
+HashTable *hashTable_init(unsigned int size,HashFun hashfun,HashCmpFun hashcmp)
 {
      int i=0;
 
@@ -45,12 +73,12 @@ HashTable *HashTable_Create(unsigned int size,HashFun hashfun,HashCmpFun hashcmp
      return hashtable_obj;
 }
 //-----------------------------------------------------------
-HashNode *HashNode_Create(void *data)
+HashNode *hashNode_create(void *data)
 {
     HashNode *hashnode = (HashNode *)malloc(sizeof(HashNode));
 
     if (NULL == hashnode){
-       log_error("HashNode_Create:hash node malloc fail!!!");
+       log_error("hashNode_create:hash node malloc fail!!!");
        return NULL;
     }
 
@@ -59,7 +87,7 @@ HashNode *HashNode_Create(void *data)
     return hashnode;
 }
 //-----------------------------------------------------------
-void HashTable_Clear(HashTable *hashtable)
+void hashTable_clear(HashTable *hashtable)
 {
     int i=0;
 
@@ -79,7 +107,7 @@ void HashTable_Clear(HashTable *hashtable)
     free(hashtable);
 }
 //-----------------------------------------------------------
-float HashTable_Loadfactor(HashTable *hashtable)
+float hashTable_loadfactor(HashTable *hashtable)
 {
    unsigned int touched=0;
                  int i =0;
@@ -101,7 +129,7 @@ float HashTable_Loadfactor(HashTable *hashtable)
    return factor;
 }
 //-----------------------------------------------------------
-void *HashTable_Remove(HashTable *hashtable,void *key)
+void *hashTable_remove(HashTable *hashtable,void *key)
 {
     DataNode *datanode = NULL;
     void      *current = NULL;
@@ -125,7 +153,7 @@ void *HashTable_Remove(HashTable *hashtable,void *key)
    return current;
 }
 //-----------------------------------------------------------
-void HashTable_Add(HashTable *hashtable,void *key,void *data)
+void hashTable_push(HashTable *hashtable,void *key,void *data)
 {
    if (NULL == hashtable){
 	   log_error("HashTable_Add:hash table obj is NULL !!!");
@@ -135,7 +163,7 @@ void HashTable_Add(HashTable *hashtable,void *key,void *data)
    unsigned int index = hashtable->hashfun(key,strlen(key)) % hashtable->hashsize;
 
    if (NULL == hashtable->buckets[index]){
-       hashtable->buckets[index] = HashNode_Create(data);
+       hashtable->buckets[index] = hashNode_create(data);
    }
 
    if ( NULL != hashtable->buckets[index]){
@@ -143,7 +171,7 @@ void HashTable_Add(HashTable *hashtable,void *key,void *data)
    }
 }
 //-----------------------------------------------------------
-void *HashTable_Get(HashTable *hashtable,void *key)
+void *hashTable_pop(HashTable *hashtable,void *key)
 {
     DataNode *datanode = NULL;
 

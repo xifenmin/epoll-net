@@ -23,14 +23,14 @@ extern "C" {
 struct tagServerObj
 {
 	struct tagEpollObj    *epollobj;
-	DynamicArray *dynamicarray;/*动态数组*/
-	ConnMgr      *connmgr;/*server 端连接池，管理客户端连接*/
-	ConnObj      *connobj;/*server 端连接描述符*/
-	LockerObj    *lockerobj;/*接收队列锁*/
-	DataQueue    *rqueue;/*接收队列*/
-	Threadpool   *serverthread;//主 server 线程池
-	Threadpool   *datathread;//处理接收数据  线程池
-	ProcRead     procread;/*客户端回调*/
+	DynamicArrayInterface *dynamicarray_interface;/*动态数组*/
+	ConnMgr               *connmgr;/*server 端连接池，管理客户端连接*/
+	ConnObj               *connobj;/*server 端连接描述符*/
+	LockerInterface       *lockerInterface;/*接收队列锁*/
+	DataQueueInterface    *rqueueInterface;/*接收队列*/
+	Threadpool            *serverthread;//主 server 线程池
+	Threadpool            *datathread;//处理接收数据  线程池
+	ProcRead               procread;/*客户端回调*/
 };
 
 typedef struct tagServerObj   ServerObj;

@@ -4,7 +4,37 @@
 #include "array.h"
 #include "log.h"
 
-DynamicArray *DynamicArray_Create(unsigned int ncount,unsigned int itemsize)
+DynamicArrayInterface *DynamicArrayInterface_Create(unsigned int ncount,unsigned int itemsize)
+{
+	DynamicArrayInterface *dynamicarray_interface = NULL;
+
+	dynamicarray_interface = (DynamicArrayInterface *)malloc(sizeof(DynamicArrayInterface));
+
+	if (NULL != dynamicarray_interface)
+	{
+		dynamicarray_interface->array  = dynamicArray_init(ncount,itemsize);
+		dynamicarray_interface->push   = dynamicArray_push;
+		dynamicarray_interface->pop    = dynamicArray_pop;
+		dynamicarray_interface->value  = dynamicArray_value;
+		dynamicarray_interface->head   = dynamicArray_head;
+		dynamicarray_interface->end    = dynamicArray_end;
+		dynamicarray_interface->index  = dynamicArray_index;
+		dynamicarray_interface->clear  = dynamicArray_clear;
+	}
+
+	return dynamicarray_interface;
+}
+
+void DynamicArrayInterface_Destory(DynamicArrayInterface *dynamicarray_interface)
+{
+	if (dynamicarray_interface != NULL) {
+		dynamicarray_interface->clear(dynamicarray_interface->array);
+		free(dynamicarray_interface);
+		dynamicarray_interface = NULL;
+	}
+}
+
+DynamicArray *dynamicArray_init(unsigned int ncount,unsigned int itemsize)
 {
 	DynamicArray *dynamic_array    = NULL;
 	dynamic_array = (DynamicArray *)malloc(sizeof(DynamicArray));
@@ -28,7 +58,7 @@ DynamicArray *DynamicArray_Create(unsigned int ncount,unsigned int itemsize)
 	return dynamic_array;
 }
 
-void DynamicArray_Clear(DynamicArray *dynamicarray)
+void dynamicArray_clear(DynamicArray *dynamicarray)
 {
    if (NULL == dynamicarray){
 	   return;

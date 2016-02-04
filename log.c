@@ -26,7 +26,7 @@ struct taglogger {
 	unsigned long long wcurr;//当前写的位置
 	unsigned long long wtotal;//总共写入数
 	unsigned long long rotatesize;//日志切割大小
-    LockerObj *lockerobj;
+	LockerInterface *lockerInterface;
 };
 
 static inline void setlevel(int level)
@@ -181,7 +181,7 @@ static int logv(char *fmt,char *data,int datalen,va_list ap)
 
 	len = ptr - buf;
 
-	logger->lockerobj->Lock(logger->lockerobj->locker);
+	logger->lockerInterface->lock(logger->lockerInterface->locker);
 
     fwrite(buf, len, 1, logger->fp);
 	fflush(logger->fp);
@@ -192,7 +192,8 @@ static int logv(char *fmt,char *data,int datalen,va_list ap)
 	if (logger->rotatesize > 0 && logger->wcurr > logger->rotatesize) {
 		rotate(logger);
 	}
-	logger->lockerobj->Unlock(logger->lockerobj->locker);
+
+	logger->lockerInterface->unlock(logger->lockerInterface->locker);
 	return 0;
 }
 
@@ -212,7 +213,7 @@ Logger *Logger_Create(int level,int rotate_size,char *name)
 		logger->wtotal      = 0;
 		logger->rotatesize  = rotate_size * 1024 * 1024;//日志切割默认都是MB;
 
-		logger->lockerobj = LockerObj_Create();
+		logger->lockerInterface = LockerInterface_Create();
 
 		if(strcmp(name, "stdout") == 0){
 			logger->fp = stdout;
@@ -236,10 +237,11 @@ void Logger_Destory(void)
 	Logger *logger = &loggobj;
 
    if (logger != NULL){
-	   Locker_Free(logger->lockerobj->locker);
-	   Locker_Clear(logger->lockerobj->locker);
-	   logger->lockerobj->locker = NULL;
+
+	   logger->lockerInterface->clear(logger->lockerInterface->locker);
+	   logger->lockerInterface->locker = NULL;
 	   logclose();
+
    }
 }
 

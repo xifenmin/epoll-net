@@ -36,8 +36,8 @@ typedef struct tagConnObj *(*GetConn)(struct tagConntMgr *);
 typedef void (*Reset)(struct tagConnObj *);
 
 struct tagConntMgr {
-	LockerObj *lockerobj;
-	DataQueue *queue;
+	LockerInterface *lockerInterface;
+	DataQueueInterface *queueInterface;
 	SetConn    set;
 	GetConn    get;
 	Reset      reset;
@@ -45,7 +45,7 @@ struct tagConntMgr {
 
 /*建立连接池*/
 ConnMgr *ConnMgr_Create(void);
-void ConnMgr_Clear(struct tagConntMgr *connmgr);
+void ConnMgr_Destory(struct tagConntMgr *connmgr);
 /*连接Reset*/
 void   connobjReset(ConnObj *connobj);
 /*push 一个新连接push到连接池中*/

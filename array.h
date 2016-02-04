@@ -22,9 +22,26 @@ struct tagArray{
     unsigned int nmalloc;/*当前动态数组中，能容纳多少元素*/
 };
 
+struct tagDynamicArrayInterface
+{
+	DynamicArray *array;
+    void *(*push)(struct tagArray *);
+    void *(*pop)(struct tagArray *);
+    void *(*value)(struct tagArray *,unsigned int index);
+    void *(*head)(struct tagArray *);
+    void *(*end)(struct tagArray *);
+    unsigned int (*index)(struct tagArray *,void *array);
+    void (*clear)(struct tagArray *);
+};
+
+typedef struct tagDynamicArrayInterface DynamicArrayInterface;
+
+DynamicArrayInterface *DynamicArrayInterface_Create(unsigned int ncount,unsigned int itemsize);
+void DynamicArrayInterface_Destory(DynamicArrayInterface *dynamicarray_interface);
+
 /*初始化动态数组*/
-DynamicArray *DynamicArray_Create(unsigned int ncount,unsigned int itemsize);
-void DynamicArray_Clear(DynamicArray *dynamicarray);
+DynamicArray *dynamicArray_init(unsigned int ncount,unsigned int itemsize);
+void dynamicArray_clear(DynamicArray *dynamicarray);
 /*动态数组中push*/
 void *dynamicArray_push(DynamicArray *dynamicarray);
 /*动态数组pop*/
