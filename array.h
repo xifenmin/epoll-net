@@ -37,23 +37,23 @@ struct tagDynamicArrayInterface
 typedef struct tagDynamicArrayInterface DynamicArrayInterface;
 
 DynamicArrayInterface *DynamicArrayInterface_Create(unsigned int ncount,unsigned int itemsize);
-void DynamicArrayInterface_Destory(DynamicArrayInterface *dynamicarray_interface);
+void DynamicArrayInterface_Destory(DynamicArrayInterface *dynamicArrayInterface);
 
 /*初始化动态数组*/
 DynamicArray *dynamicArray_init(unsigned int ncount,unsigned int itemsize);
-void dynamicArray_clear(DynamicArray *dynamicarray);
+void dynamicArray_clear(DynamicArray *dynamicArray);
 /*动态数组中push*/
-void *dynamicArray_push(DynamicArray *dynamicarray);
+void *dynamicArray_push(DynamicArray *dynamicArray);
 /*动态数组pop*/
-void *dynamicArray_pop(DynamicArray *dynamicarray);
+void *dynamicArray_pop(DynamicArray *dynamicArray);
 /*下标索引操作*/
-void *dynamicArray_value(DynamicArray *dynamicarray,unsigned int index);
+void *dynamicArray_value(DynamicArray *dynamicArray,unsigned int index);
 /*动态数组头*/
-void *dynamicArray_head(DynamicArray *dynamicarray);
+void *dynamicArray_head(DynamicArray *dynamicArray);
 /*动态数组尾*/
-void *dynamicArray_end(DynamicArray *dynamicarray);
+void *dynamicArray_end(DynamicArray *dynamicArray);
 /*得到元素的索引位置*/
-unsigned int dynamicArray_index(DynamicArray *dynamicarray,void *array);
+unsigned int dynamicArray_index(DynamicArray *dynamicArray,void *array);
 
 #ifdef __cplusplus
 }

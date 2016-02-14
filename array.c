@@ -6,173 +6,173 @@
 
 DynamicArrayInterface *DynamicArrayInterface_Create(unsigned int ncount,unsigned int itemsize)
 {
-	DynamicArrayInterface *dynamicarray_interface = NULL;
+	DynamicArrayInterface *dynamicArrayInterface = NULL;
 
-	dynamicarray_interface = (DynamicArrayInterface *)malloc(sizeof(DynamicArrayInterface));
+	dynamicArrayInterface = (DynamicArrayInterface *)malloc(sizeof(DynamicArrayInterface));
 
-	if (NULL != dynamicarray_interface)
+	if (NULL != dynamicArrayInterface)
 	{
-		dynamicarray_interface->array  = dynamicArray_init(ncount,itemsize);
-		dynamicarray_interface->push   = dynamicArray_push;
-		dynamicarray_interface->pop    = dynamicArray_pop;
-		dynamicarray_interface->value  = dynamicArray_value;
-		dynamicarray_interface->head   = dynamicArray_head;
-		dynamicarray_interface->end    = dynamicArray_end;
-		dynamicarray_interface->index  = dynamicArray_index;
-		dynamicarray_interface->clear  = dynamicArray_clear;
+		dynamicArrayInterface->array  = dynamicArray_init(ncount,itemsize);
+		dynamicArrayInterface->push   = dynamicArray_push;
+		dynamicArrayInterface->pop    = dynamicArray_pop;
+		dynamicArrayInterface->value  = dynamicArray_value;
+		dynamicArrayInterface->head   = dynamicArray_head;
+		dynamicArrayInterface->end    = dynamicArray_end;
+		dynamicArrayInterface->index  = dynamicArray_index;
+		dynamicArrayInterface->clear  = dynamicArray_clear;
 	}
 
-	return dynamicarray_interface;
+	return dynamicArrayInterface;
 }
 
-void DynamicArrayInterface_Destory(DynamicArrayInterface *dynamicarray_interface)
+void DynamicArrayInterface_Destory(DynamicArrayInterface *dynamicArrayInterface)
 {
-	if (dynamicarray_interface != NULL) {
-		dynamicarray_interface->clear(dynamicarray_interface->array);
-		free(dynamicarray_interface);
-		dynamicarray_interface = NULL;
+	if (dynamicArrayInterface != NULL) {
+		dynamicArrayInterface->clear(dynamicArrayInterface->array);
+		free(dynamicArrayInterface);
+		dynamicArrayInterface = NULL;
 	}
 }
 
 DynamicArray *dynamicArray_init(unsigned int ncount,unsigned int itemsize)
 {
-	DynamicArray *dynamic_array    = NULL;
-	dynamic_array = (DynamicArray *)malloc(sizeof(DynamicArray));
+	DynamicArray *dynamicArray    = NULL;
+	dynamicArray = (DynamicArray *)malloc(sizeof(DynamicArray));
 
-	if (NULL == dynamic_array){
+	if (NULL == dynamicArray){
 	 	log_error("DynamicArray_Create:DynamicArray obj malloc fail!!!");
 	 	return NULL;
 	}
 
-	dynamic_array->item = malloc(ncount * itemsize);
+	dynamicArray->item = malloc(ncount * itemsize);
 
-	if (NULL == dynamic_array->item){
+	if (NULL == dynamicArray->item){
 		log_error("DynamicArray_Create:DynamicArray item malloc fail!!!");
 		return NULL;
 	}
 
-	dynamic_array->nitem   = 0;/*初始化当前已经使用的item为0*/
-	dynamic_array->size    = itemsize;/*每个元素大小*/
-	dynamic_array->nmalloc = ncount; /*总共元素个数*/
+	dynamicArray->nitem   = 0;/*初始化当前已经使用的item为0*/
+	dynamicArray->size    = itemsize;/*每个元素大小*/
+	dynamicArray->nmalloc = ncount; /*总共元素个数*/
 
-	return dynamic_array;
+	return dynamicArray;
 }
 
-void dynamicArray_clear(DynamicArray *dynamicarray)
+void dynamicArray_clear(DynamicArray *dynamicArray)
 {
-   if (NULL == dynamicarray){
+   if (NULL == dynamicArray){
 	   return;
    }
 
-   if (dynamicarray->item != NULL){
-	   free(dynamicarray->item);
-	   dynamicarray->item = NULL;
+   if (dynamicArray->item != NULL){
+	   free(dynamicArray->item);
+	   dynamicArray->item = NULL;
    }
 
-   free(dynamicarray);
-   dynamicarray = NULL;
+   free(dynamicArray);
+   dynamicArray = NULL;
 }
 
-void *dynamicArray_push(DynamicArray *dynamicarray)
+void *dynamicArray_push(DynamicArray *dynamicArray)
 {
   void *array       = NULL;
   void *new_array   = NULL;
   unsigned int size = 0;
 
-  if (NULL == dynamicarray){
+  if (NULL == dynamicArray){
 	  return NULL;
   }
 
-  if (dynamicarray->nitem == dynamicarray->nmalloc){ /*代表动态数组已经满了，需要扩容*/
+  if (dynamicArray->nitem == dynamicArray->nmalloc){ /*代表动态数组已经满了，需要扩容*/
 
-	   size      = dynamicarray->size * dynamicarray->nmalloc;/*当前元素总共的 大小*/
-	   new_array = realloc(dynamicarray->item, 2 * size);/*在原来内存基础上，再扩容2倍*/
+	   size      = dynamicArray->size * dynamicArray->nmalloc;/*当前元素总共的 大小*/
+	   new_array = realloc(dynamicArray->item, 2 * size);/*在原来内存基础上，再扩容2倍*/
 
 	   if (new_array == NULL) {
 	       return NULL;
 	   }
 
-	   dynamicarray->item     = new_array;/*动态数组首地址，指向新的地址*/
-	   dynamicarray->nmalloc *= 2;/*元素大小扩大到2倍*/
+	   dynamicArray->item     = new_array;/*动态数组首地址，指向新的地址*/
+	   dynamicArray->nmalloc *= 2;/*元素大小扩大到2倍*/
   }
 
-  array  = (void *)dynamicarray->item + dynamicarray->size * dynamicarray->nitem;/*返回新位置的内存地址*/
-  dynamicarray->nitem++;
+  array  = (void *)dynamicArray->item + dynamicArray->size * dynamicArray->nitem;/*返回新位置的内存地址*/
+  dynamicArray->nitem++;
 
   return array;
 }
 
-void *dynamicArray_pop(DynamicArray *dynamicarray)
+void *dynamicArray_pop(DynamicArray *dynamicArray)
 {
 	void *array = NULL;
 
-	if (NULL == dynamicarray){
+	if (NULL == dynamicArray){
 		return NULL;
 	}
 
-	if (dynamicarray->nitem > 0){
-		dynamicarray->nitem--;
-		array = dynamicarray->item + dynamicarray->size * dynamicarray->nitem;
+	if (dynamicArray->nitem > 0){
+		dynamicArray->nitem--;
+		array = dynamicArray->item + dynamicArray->size * dynamicArray->nitem;
 	}
 
 	return array;
 }
 
-void *dynamicArray_value(DynamicArray *dynamicarray,unsigned int index)
+void *dynamicArray_value(DynamicArray *dynamicArray,unsigned int index)
 {
 	void *array = NULL;
 
-	if (NULL == dynamicarray){
+	if (NULL == dynamicArray){
 		return NULL;
 	}
 
-	if (index < dynamicarray->nitem){
-	    array = dynamicarray->item + (dynamicarray->size * index);
+	if (index < dynamicArray->nitem){
+	    array = dynamicArray->item + (dynamicArray->size * index);
 	}
 
 	return array;
 }
 
-void *dynamicArray_head(DynamicArray *dynamicarray)
+void *dynamicArray_head(DynamicArray *dynamicArray)
 {
    void *array = NULL;
 
-   if (NULL == dynamicarray){
+   if (NULL == dynamicArray){
 	   return NULL;
    }
 
-   array = dynamicArray_value(dynamicarray,0);
+   array = dynamicArray_value(dynamicArray,0);
 
    return array;
 }
 
-void *dynamicArray_end(DynamicArray *dynamicarray)
+void *dynamicArray_end(DynamicArray *dynamicArray)
 {
 	void *array = NULL;
 
-	if (NULL == dynamicarray){
+	if (NULL == dynamicArray){
 		return NULL;
 	}
 
-	array = dynamicArray_value(dynamicarray,dynamicarray->nmalloc);
+	array = dynamicArray_value(dynamicArray,dynamicArray->nmalloc);
 
 	return array;
 }
 
-unsigned int dynamicArray_index(DynamicArray *dynamicarray,void *array)
+unsigned int dynamicArray_index(DynamicArray *dynamicArray,void *array)
 {
 	void *p, *q;
 	unsigned int offset, index;
 
-	if (array < dynamicarray->item)
+	if (array < dynamicArray->item)
 		return -1;
 
-	p = dynamicarray->item;
+	p = dynamicArray->item;
 	q = array;
 
 	offset = (unsigned int)(q - p);
 
-	index = offset/(unsigned int)dynamicarray->size;
+	index = offset/(unsigned int)dynamicArray->size;
 
 	return index;
 }

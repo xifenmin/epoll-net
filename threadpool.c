@@ -73,6 +73,7 @@ int Threadpool_Free(Threadpool *thread_pool) {
 	if (thread_pool->threadmgr) {
 
 		free(thread_pool->threadmgr);
+
 		thread_pool->queueInterface->clear(thread_pool->queueInterface->queue);
 		thread_pool->lockerInterface->clear(thread_pool->lockerInterface->locker);
 	}
