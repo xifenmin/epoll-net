@@ -14,6 +14,7 @@
 #include "connmgr.h"
 #include "cstr.h"
 
+#define DEBUG      1
 #define STACKSIZE (258 * 1024 * 1024)
 
 static inline int init_limit(void)
