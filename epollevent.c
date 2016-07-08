@@ -119,7 +119,6 @@ int epollEvent_wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
  {
 	int i = 0;
 	int events = 0;
-	int len    = 0;
 
 	ConnObj *_connobj    = NULL;
 	ServerObj *serverobj = (ServerObj *)_serverobj;
@@ -140,7 +139,7 @@ int epollEvent_wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 
 			if (evb->cb != NULL){
 				_connobj = ev->data.ptr;
-				len = evb->cb(serverobj, _connobj, events);
+				evb->cb(serverobj, _connobj, events);
 			}
 		}
 
@@ -152,7 +151,7 @@ int epollEvent_wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 			events |= EVENT_READ;
 			if (evb->cb != NULL) {
 				_connobj = ev->data.ptr;
-				len = evb->cb(serverobj, _connobj, events);
+				evb->cb(serverobj, _connobj, events);
 		}
 	  }
 	}
