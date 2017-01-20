@@ -3,7 +3,7 @@
  *
  *  Created on: 2015-12-02
  *      Author: xifengming
- *       Email: xifengming@vip.sina.com
+ *       Email: xifenmin@vip.sina.com
  *    Comments: net epoll
  *********************************************/
 #ifndef _EPOLL_H
