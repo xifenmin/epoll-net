@@ -35,9 +35,24 @@ int sendData(ConnObj *conntobj) {
 
 	len = conntobj->sendlen;
 
-	ret = write(conntobj->fd,conntobj->sendptr,len);
+	int offset = 0;
+	while (len>0) {
+		ret = write(conntobj->fd,&conntobj->sendptr[offset],len);
 
-	return ret;
+		if (ret <0){
+			if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK){
+				//尝试再读一次。
+				continue;
+			}
+		}
+
+		if (ret < len){
+			len    = len - ret;
+			offset = offset + ret;
+		}
+	}
+
+	return offset;
 }
 
 int readData(ConnObj *conntobj,unsigned char *ptr,int len)
