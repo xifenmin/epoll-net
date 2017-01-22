@@ -241,7 +241,6 @@ void Logger_Destory(void)
 	   logger->lockerInterface->clear(logger->lockerInterface->locker);
 	   logger->lockerInterface->locker = NULL;
 	   logclose();
-
    }
 }
 
