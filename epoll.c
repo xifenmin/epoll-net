@@ -17,8 +17,7 @@
 EpollBase *epollBase_init(int events)
 {
 	EpollBase *evb = NULL;
-		
-	EpollBase *evbb = NULL;
+
 	struct epoll_event *event = NULL;
 
 	int ephandle = 0;

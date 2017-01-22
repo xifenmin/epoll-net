@@ -51,7 +51,7 @@ int readData(ConnObj *conntobj,unsigned char *ptr,int len)
 	nLen = read(conntobj->fd,ptr,len);
 
 	if (nLen < 0) {
-		if (errno == EAGAIN || errno == EINTR){
+		if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK){
 			//尝试再读一次。
 			return -1;
 		}
