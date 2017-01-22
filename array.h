@@ -3,7 +3,7 @@
  *
  *  Created on: 2016-01-28
  *      Author: xifengming
- *       Email: xifengming@vip.sina.com
+ *       Email: xifenmin@vip.sina.com
  *    Comments: dynamic array
  *********************************************/
 #ifndef _DYNAMIC_ARRAY_H
