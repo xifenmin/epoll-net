@@ -36,13 +36,16 @@ int sendData(ConnObj *conntobj) {
 	len = conntobj->sendlen;
 
 	int offset = 0;
+
 	while (len>0) {
 		ret = write(conntobj->fd,&conntobj->sendptr[offset],len);
 
 		if (ret <0){
-			if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK){
-				//尝试再读一次。
-				continue;
+			if (errno == EAGAIN || errno == EWOULDBLOCK){
+				break;
+			}
+			else {
+				return -1;
 			}
 		}
 
@@ -57,21 +60,36 @@ int sendData(ConnObj *conntobj) {
 
 int readData(ConnObj *conntobj,unsigned char *ptr,int len)
 {
-	int nLen = 0;
+	int nLen   = 0;
+	int offset = 0;
 
 	if (NULL == conntobj){
 		return -1;
 	}
 
-	nLen = read(conntobj->fd,ptr,len);
+	for(;;){
 
-	if (nLen < 0) {
-		if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK){
-			//尝试再读一次。
-			return -1;
+		offset = read(conntobj->fd,ptr,len);
+
+		if (offset >0){
+			nLen = nLen + offset;
+			if (nLen == len){ //如果read返回是缓存区的大小一样，就再读取一次.
+				continue;
+			}
+			break;
 		}
-	}else if (nLen == 0){
-		return 0;
+
+		if (offset < 0) {
+			   if (errno == EINTR ){
+				   continue;
+			   }
+		       if (errno == EAGAIN || errno == EWOULDBLOCK){//OK銆�
+				  break;
+		       }
+		}else if (offset == 0){
+			nLen = offset;
+			break;
+		}
 	}
 
 	return nLen;
@@ -82,7 +100,7 @@ void closeConnObj(ConnObj *conntobj)
      if (NULL != conntobj){
 
  		log_info("connect closed:%d",conntobj->fd);
- 		close(conntobj->fd);/*连接关闭*/
+ 		close(conntobj->fd);/*杩炴帴鍏抽棴*/
  		conntobj->activity = SOCKET_CONNCLOSED;
  		conntobj->fd = -1;
      }
@@ -96,7 +114,7 @@ void noDelay(ConnObj *connobj,int enable)
 
 void keepAlive(ConnObj *connobj,int enable){
 	int opt = enable? 1 : 0;
-	setsockopt(connobj->fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&opt, sizeof(opt));
+	setsockopt(connobj->fd, SOL_SOCKET,SO_KEEPALIVE,(void *)&opt, sizeof(opt));
 }
 
 void noBlock(ConnObj *connobj,int enable){

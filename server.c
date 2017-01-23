@@ -29,7 +29,7 @@ ServerObj * StartServer(char *ip,unsigned short port,ProcRead procread)
 			memcpy(serverobj->connobj->ip, ip, sizeof(serverobj->connobj->ip));
 
 			serverobj->connobj->port = port;
-			serverobj->procread      = procread;/*注册调用者接收回调函数*/
+			serverobj->procread      = procread;
 
 			Server_Listen(serverobj);
 
@@ -58,10 +58,10 @@ ServerObj *Server_Create(int events)
 		serverobj->lockerInterface        = LockerInterface_Create();
 		serverobj->connobj                = CreateNewConnObj();
 		serverobj->rqueueInterface        = DataQueueInterface_Create();
-		serverobj->serverthread           = Threadpool_Create(1);/*Proactor 模式，单线程*/
-		serverobj->datathread             = Threadpool_Create(5);/*数据线程池，处理接收数据用的*/
+		serverobj->serverthread           = Threadpool_Create(1);
+		serverobj->datathread             = Threadpool_Create(5);
 
-		serverobj->connmgr->reset(serverobj->connobj);/*初始化socket连接对象*/
+		serverobj->connmgr->reset(serverobj->connobj);
 	}
 
 	return serverobj;
@@ -74,6 +74,7 @@ void Server_Clear(ServerObj *serverobj)
     	Threadpool_Destroy(serverobj->serverthread);
     	ConnMgr_Destory(serverobj->connmgr);
     	serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
+
     	if (serverobj->connobj != NULL){
     		free(serverobj->connobj);
     		serverobj->connobj = NULL;
@@ -166,9 +167,9 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 		_connobj->nodelay(_connobj,1);
 		_connobj->noblock(_connobj,1);
 
-		if (serverobj->epollInterface->add(serverobj->epollInterface->epollbase,_connobj,EPOLLIN|EPOLLRDHUP) !=0 ){/*设置客户端socket epoll事件*/
+		if (serverobj->epollInterface->add(serverobj->epollInterface->epollbase,_connobj,EPOLLIN|EPOLLRDHUP) !=0 ){/*璁剧疆瀹㈡埛绔痵ocket epoll浜嬩欢*/
            /*add fail*/
-			serverobj->connmgr->set(serverobj->connmgr,_connobj);/*把连接对象，放回到连接池中*/
+			serverobj->connmgr->set(serverobj->connmgr,_connobj);
 			goto sock_err;
 		}
 
@@ -187,6 +188,7 @@ sock_err:
 	}
     return NULL;
 }
+
 int  ServerSend(ServerObj *serverobj,ConnObj *connobj,char *data,int len)
 {
 	char *dptr   = NULL;

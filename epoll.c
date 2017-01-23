@@ -13,7 +13,6 @@
 #include "server.h"
 #include "cstr.h"
 
-
 EpollBase *epollBase_init(int events)
 {
 	EpollBase *evb = NULL;
@@ -57,13 +56,12 @@ void epollBase_destory(EpollBase *evb)
 	}
 }
 
-int event_write(ServerObj *serverobj,ConnObj *connobj)
+void event_write(ServerObj *serverobj,ConnObj *connobj)
 {
 	int datalen    = 0;
 	int ret        = -1;
 
 	if (connobj->sendptr != NULL && connobj->sendlen > 0 ) {
-		serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
 		datalen = connobj->send(connobj);
 
 	    log_info("send data ip:%s,port:%d,data:%s,len:%d",connobj->ip,connobj->port,connobj->sendptr,datalen);
@@ -74,6 +72,7 @@ int event_write(ServerObj *serverobj,ConnObj *connobj)
 	    	connobj->sendlen = 0;
 		}
 
+	    serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
 	    ret = serverobj->epollInterface->modify(serverobj->epollInterface->epollbase,connobj,EVENT_READ|EPOLLERR);
 
 	    if (ret < 0){
@@ -83,68 +82,52 @@ int event_write(ServerObj *serverobj,ConnObj *connobj)
 		}
 	    serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
 	}
-
-	return datalen;
 }
 
-int event_read(ServerObj *serverobj,ConnObj *connobj)
+void event_read(ServerObj *serverobj,ConnObj *connobj)
 {
 	Item     *item = NULL;
 	char *dptr     = NULL;
 	int datalen    = 0;
 
 	unsigned char recvbuffer[1024 * 16] = { 0 };
+
 	int recvlen = connobj->recv(connobj, recvbuffer, sizeof(recvbuffer));
 
 	if (recvlen == 0){
 
-		serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
-		serverobj->epollInterface->del(serverobj->epollInterface->epollbase,connobj);
-		connobj->close(connobj);
-		serverobj->connmgr->set(serverobj->connmgr,connobj);
-		serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
-
-		log_debug("push connobj to conn poll,fd:%d!!!\n",connobj);
-
-		return 0;
+		return;
+//		serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
+//		serverobj->epollInterface->del(serverobj->epollInterface->epollbase,connobj);
+//		connobj->close(connobj);
+//		serverobj->connmgr->set(serverobj->connmgr,connobj);
+//		serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
+//
+//		log_debug("push connobj to conn poll,fd:%d!!!\n",connobj->fd);
 	}
 
-	if (recvlen < 0) {
+	if (recvlen > 0) {
 
-		recvlen = connobj->recv(connobj, recvbuffer, sizeof(recvbuffer));
-
-		if (recvlen > 0) {
-
-			if (dptr == NULL){
-				dptr = CStr_Malloc((char *)recvbuffer,recvlen);
-			}
-				datalen += recvlen;
-			}
-		}else{
-			    dptr = CStr_Malloc((char *)recvbuffer,recvlen);
+		if (dptr == NULL){
+			dptr = CStr_Malloc((char *)recvbuffer,recvlen);
 		}
 
-		datalen = recvlen;
+		item = (Item *) malloc(sizeof(struct tagConnItem));
 
-		if (datalen > 0) {
+		if (item != NULL) {
 
-			item = (Item *) malloc(sizeof(struct tagConnItem));
+			item->connobj = connobj;
+			item->recvptr = dptr;
+			item->recvlen = datalen;
 
-			if (item != NULL) {
-				item->connobj = connobj;
-				item->recvptr = dptr;
-				item->recvlen = datalen;
+			connobj->last_time = time(NULL);
 
-				connobj->last_time = time(NULL);
-
-				serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
-				serverobj->rqueueInterface->push(serverobj->rqueueInterface->queue,item);
-				serverobj->lockerInterface->post(serverobj->lockerInterface->locker);
-				serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
-			}
+			serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
+			serverobj->rqueueInterface->push(serverobj->rqueueInterface->queue,item);
+			serverobj->lockerInterface->post(serverobj->lockerInterface->locker);
+			serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
 		}
-
-	return datalen;
+	}
 }
 
 int epollEvent_callback(void *_serverobj,void *connobj,int events)
@@ -158,13 +141,11 @@ int epollEvent_callback(void *_serverobj,void *connobj,int events)
 
 	ServerObj *serverobj = (ServerObj *)_serverobj;
 
-	int datalen = 0;
-
 	if (NULL == serverobj) {
 		return -1;
 	}
 
-	if (serverobj->connobj == _connobj) /*如果是服务端*/
+	if (serverobj->connobj == _connobj) /*濡傛灉鏄湇鍔＄*/
 		_connobj = Server_Accept(serverobj);
 
 	if (_connobj == NULL)
@@ -204,15 +185,15 @@ int epollEvent_callback(void *_serverobj,void *connobj,int events)
 		close(_connobj->fd);
 	}
 
-	if (EVENT_READ & events) { /*检测到读事件*/
+	if (EVENT_READ & events) { /*妫�祴鍒拌浜嬩欢*/
 
-		datalen = event_read(serverobj,_connobj);
+		event_read(serverobj,_connobj);
 	}
 
-	if (EVENT_WRITE & events) { /*检测到写事件*/
-		datalen = event_write(serverobj,_connobj);
+	if (EVENT_WRITE & events) { /*妫�祴鍒板啓浜嬩欢*/
+		event_write(serverobj,_connobj);
 	}
 
-	return datalen;
+	return 0;
 }
 

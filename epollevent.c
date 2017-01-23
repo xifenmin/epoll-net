@@ -129,7 +129,7 @@ int epollEvent_wait(struct tagEpollBase *evb,void *_serverobj,int timeout)
 		return -1;
 	}
 
-	int fd_active_nums = epoll_wait(evb->epollhandle, evb->event,EPOLL_EVENTS_NUM, timeout);
+	int fd_active_nums = epoll_wait(evb->epollhandle, evb->event,EPOLL_EVENTS_NUM,timeout);
 
 	for (; i < fd_active_nums; i++) {
 		ev = &evb->event[i];
