@@ -14,7 +14,7 @@
 #include "log.h"
 #include "cstr.h"
 
-#define  FILE_NAME "/home/fengming/xfm/epoll-net/log/test_server.log"
+#define  FILE_NAME "/home/xifengming/epoll-net/log/test_server.log"
 
 typedef struct tagtest
 {

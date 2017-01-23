@@ -95,7 +95,6 @@ void event_read(ServerObj *serverobj,ConnObj *connobj)
 	int recvlen = connobj->recv(connobj, recvbuffer, sizeof(recvbuffer));
 
 	if (recvlen == 0){
-
 		return;
 //		serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
 //		serverobj->epollInterface->del(serverobj->epollInterface->epollbase,connobj);
@@ -104,7 +103,7 @@ void event_read(ServerObj *serverobj,ConnObj *connobj)
 //		serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
 //
 //		log_debug("push connobj to conn poll,fd:%d!!!\n",connobj->fd);
-	}
+    }
 
 	if (recvlen > 0) {
 
