@@ -4,6 +4,7 @@
  *  Created on: 2015-12-13
  *      Author: xifengming
  *       Email: xifenmin@vip.sina.com
+ *
  *    Comments: socket conn obj
  *********************************************/
 #ifndef _CONN_OBJ_H

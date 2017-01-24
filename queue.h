@@ -4,6 +4,7 @@
  *  Created on: 2015-04-17
  *      Author: xifengming
  *       Email: xifenmin@vip.sina.com
+ *
  *    Comments: data struct
  *********************************************/
 #ifndef _DATAQUEUE_H

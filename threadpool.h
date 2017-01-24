@@ -4,6 +4,7 @@
 *  Created on: 2015-04-20
 *      Author: xifengming
 *       Email: xifenmin@vip.sina.com
+*
 *    Comments: thread pool 
  *********************************************/
 #ifndef _THREAD_POOL_H
