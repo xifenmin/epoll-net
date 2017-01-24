@@ -86,7 +86,6 @@ void event_read(ServerObj *serverobj,ConnObj *connobj)
 {
 	Item     *item = NULL;
 	char *dptr     = NULL;
-	int datalen    = 0;
 
 	unsigned char recvbuffer[1024 * 16] = { 0 };
 

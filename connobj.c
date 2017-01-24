@@ -102,7 +102,7 @@ void closeConnObj(ConnObj *conntobj)
  		log_info("connect closed:%d",conntobj->fd);
  		close(conntobj->fd);/*杩炴帴鍏抽棴*/
  		conntobj->activity = SOCKET_CONNCLOSED;
- 		//conntobj->fd = -1;
+ 		conntobj->fd = -1;
      }
 }
 
