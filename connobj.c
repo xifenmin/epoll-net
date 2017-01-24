@@ -83,8 +83,8 @@ int readData(ConnObj *conntobj,unsigned char *ptr,int len)
 			   if (errno == EINTR ){
 				   continue;
 			   }
-		       if (errno == EAGAIN || errno == EWOULDBLOCK){//OK銆�
-				  break;
+		       if (errno == EAGAIN || errno == EWOULDBLOCK){
+				  return -2;
 		       }
 		}else if (offset == 0){
 			nLen = offset;
@@ -97,12 +97,12 @@ int readData(ConnObj *conntobj,unsigned char *ptr,int len)
 
 void closeConnObj(ConnObj *conntobj)
 {
-     if (NULL != conntobj){
+     if (NULL != conntobj && conntobj->fd >0){
 
  		log_info("connect closed:%d",conntobj->fd);
  		close(conntobj->fd);/*杩炴帴鍏抽棴*/
  		conntobj->activity = SOCKET_CONNCLOSED;
- 		conntobj->fd = -1;
+ 		//conntobj->fd = -1;
      }
 }
 

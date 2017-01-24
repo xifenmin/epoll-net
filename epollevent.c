@@ -57,7 +57,7 @@ int epollEvent_addConn(struct tagEpollBase *evb, struct tagConnObj  *conn,int ev
 		 return -1;
 	}
 
-	evb->event->events   = (uint32_t) (EPOLLET | events);
+	evb->event->events   = (uint32_t)events;
 	evb->event->data.ptr = conn;
 
 	status = epoll_ctl(evb->epollhandle,EPOLL_CTL_ADD,conn->fd,evb->event);

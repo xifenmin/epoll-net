@@ -52,9 +52,9 @@ static void *Threadpool_Run(void *threadpool_obj) {
 		log_info("thread func:%s,pid:%ld", threadpool_task->name,syscall(SYS_gettid));
 
 		(*(threadpool_task->cb))(threadpool_task->arg);
-
 		thread_pool->lockerInterface->signalall(thread_pool->lockerInterface->locker);
 		thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
+
 	}
 
 	thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);

@@ -99,7 +99,12 @@ int Server_Listen(ServerObj *serverobj)
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port   = htons((unsigned short)serverobj->connobj->port);
-	addr.sin_addr.s_addr = inet_addr(serverobj->connobj->ip);
+
+	if (!strcmp(serverobj->connobj->ip,"0.0.0.0")){
+		addr.sin_addr.s_addr = INADDR_ANY;
+	}else{
+		addr.sin_addr.s_addr = inet_addr(serverobj->connobj->ip);
+	}
 
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		goto sock_err;
@@ -119,7 +124,7 @@ int Server_Listen(ServerObj *serverobj)
 		goto sock_err;
 	}
 
-	if (listen(serverobj->connobj->fd, 1024) == -1) {
+	if (listen(serverobj->connobj->fd, 511) == -1) {
 		goto sock_err;
 	}
 
@@ -145,7 +150,9 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 	struct linger opt  = {1,0};
 
 	while((client_sock = accept(serverobj->connobj->fd, (struct sockaddr *)&addr, &addrlen)) == -1){
-		if(errno != EINTR){
+		if(errno == EINTR){
+			continue;
+		}else{
 			return NULL;
 		}
 	}
@@ -153,6 +160,8 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 	setsockopt(client_sock, SOL_SOCKET, SO_LINGER, (void *)&opt, sizeof(opt));
 
 	_connobj = serverobj->connmgr->get(serverobj->connmgr);
+
+	log_info("accept fd:%d\n",client_sock);
 
 	if (_connobj != NULL){
 
@@ -167,7 +176,7 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 		_connobj->nodelay(_connobj,1);
 		_connobj->noblock(_connobj,1);
 
-		if (serverobj->epollInterface->add(serverobj->epollInterface->epollbase,_connobj,EPOLLIN|EPOLLRDHUP) !=0 ){/*璁剧疆瀹㈡埛绔痵ocket epoll浜嬩欢*/
+		if (serverobj->epollInterface->add(serverobj->epollInterface->epollbase,_connobj,EPOLLET|EPOLLIN|EPOLLRDHUP) !=0 ){
            /*add fail*/
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);
 			goto sock_err;
@@ -183,6 +192,7 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 
 sock_err:
 	if (client_sock != 0){
+		log_info("close fd:%d\n",client_sock);
 		close(client_sock);
 		return NULL;
 	}
@@ -219,6 +229,7 @@ void Server_Process(void *argv)
 			serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
 
 			if (serverobj->rqueueInterface->size(serverobj->rqueueInterface->queue) > 0){
+
 				item = serverobj->rqueueInterface->pop(serverobj->rqueueInterface->queue);
 
 				if (item != NULL){
@@ -228,18 +239,14 @@ void Server_Process(void *argv)
 					if (item->recvptr != NULL) {
 						CStr_Free(item->recvptr);
 						item->recvptr = NULL;
-				    }
-
-					//EPOLLONESHOT
-					serverobj->epollInterface->modify(serverobj->epollInterface->epollbase,item->connobj,EVENT_WRITE|EPOLLERR|EPOLLRDHUP);
+					}
 					free(item);
 					item = NULL;
 				}
 			}
-
 			serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
 		}
-	}
+	 }
 }
 
 void Server_Loop(void *argv)
