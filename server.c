@@ -244,6 +244,7 @@ void Server_Process(void *argv)
 					item = NULL;
 				}
 			}
+
 			serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
 		}
 	 }
