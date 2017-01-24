@@ -115,7 +115,7 @@ void event_read(ServerObj *serverobj,ConnObj *connobj)
 
 			item->connobj = connobj;
 			item->recvptr = dptr;
-			item->recvlen = datalen;
+			item->recvlen = recvlen;
 
 			connobj->last_time = time(NULL);
 
