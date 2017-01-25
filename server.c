@@ -19,6 +19,7 @@
 ServerObj * StartServer(char *ip,unsigned short port,ProcRead procread)
  {
 	ServerObj *serverobj = NULL;
+	int ret  = -1;
 
 	if (serverobj == NULL) {
 
@@ -31,7 +32,10 @@ ServerObj * StartServer(char *ip,unsigned short port,ProcRead procread)
 			serverobj->connobj->port = port;
 			serverobj->procread      = procread;
 
-			Server_Listen(serverobj);
+			ret = Server_Listen(serverobj);
+
+			if (ret <0)
+				return NULL;
 
 			Threadpool_Addtask(serverobj->datathread,&Server_Process,
 							"Server_Process", serverobj);
@@ -117,6 +121,7 @@ int Server_Listen(ServerObj *serverobj)
 	serverobj->connobj->keepalive(serverobj->connobj,1);
 
 	if (setsockopt(serverobj->connobj->fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+		log_error("addr is used!!!%d",opt);
 		goto sock_err;
 	}
 
@@ -152,7 +157,7 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 
 	while((client_sock = accept(serverobj->connobj->fd, (struct sockaddr *)&addr, &addrlen)) == -1){
 		if(errno == EINTR){
-
+			continue;
 		}else{
 			return NULL;
 		}
@@ -177,7 +182,7 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 		_connobj->nodelay(_connobj,1);
 		_connobj->noblock(_connobj,1);
 
-		if (serverobj->epollInterface->add(serverobj->epollInterface->epollbase,_connobj,EPOLLET|EPOLLIN|EPOLLRDHUP) !=0 ){
+		if (serverobj->epollInterface->add(serverobj->epollInterface->epollbase,_connobj,EPOLLOUT|EPOLLET|EPOLLIN|EPOLLRDHUP) !=0 ){
            /*add fail*/
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);
 			goto sock_err;
@@ -204,10 +209,11 @@ int  ServerSend(ServerObj *serverobj,ConnObj *connobj,char *data,int len)
 {
 	char *dptr   = NULL;
 	int   result = 0;
+	//int   ret    = -1;
 
     if (NULL != connobj && serverobj != NULL && len > 0 && connobj->activity == SOCKET_CONNECTED){
 
-     	dptr = CStr_Malloc((char *)data,len);
+    	dptr = CStr_Malloc((char *)data,len);
 
      	connobj->sendptr = (unsigned char *)dptr;
     	connobj->sendlen = len;

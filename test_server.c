@@ -84,9 +84,11 @@ int readdata(ConnObj *connobj,char *rdata,int len)
 
 	if (NULL != connobj && connobj->activity == SOCKET_CONNECTED && rdata!= NULL){
 		log_info("fd:%d,addr:%p,info:%s,len:%d",connobj->fd,connobj,rdata,len);
+
 		//nlen = Decode(rdata,len,data);
 		//log_hex(connobj->ip,connobj->port,data,nlen,"Recv:","");
-	    //ServerSend(serverobj,connobj,"hello,world\n",strlen("hello,world\n"));
+
+	    ServerSend(serverobj,connobj,"hello,world\n",strlen("hello,world\n"));
 	}
 
 	return 0;

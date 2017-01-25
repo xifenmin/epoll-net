@@ -26,7 +26,7 @@ ConnObj *CreateNewConnObj(void)
 
 int sendData(ConnObj *conntobj) {
 
-	int ret     = 0;
+	int nLen     = 0;
 	int len     = 0;
 
 	if (NULL == conntobj) {
@@ -35,27 +35,31 @@ int sendData(ConnObj *conntobj) {
 
 	len = conntobj->sendlen;
 
-	int offset = 0;
-
 	while (len>0) {
-		ret = write(conntobj->fd,&conntobj->sendptr[offset],len);
 
-		if (ret <0){
+		nLen = write(conntobj->fd,conntobj->sendptr+conntobj->sendlen-len,len);
+
+		if (nLen <0){
+			if (errno == EINTR ){
+				continue;
+			}
+
 			if (errno == EAGAIN || errno == EWOULDBLOCK){
-				break;
+				log_error("write error :%s",strerror(errno));
+				return -2;
 			}
 			else {
 				return -1;
 			}
 		}
 
-		if (ret < len){
-			len    = len - ret;
-			offset = offset + ret;
+		if (nLen < len){
+			len -=nLen;
+			break;
 		}
 	}
 
-	return offset;
+	return 0;
 }
 
 int readData(ConnObj *conntobj,unsigned char *ptr,int len)

@@ -59,10 +59,15 @@ void epollBase_destory(EpollBase *evb)
 void event_write(ServerObj *serverobj,ConnObj *connobj)
 {
 	int datalen    = 0;
-	int ret        = -1;
 
 	if (connobj->sendptr != NULL && connobj->sendlen > 0 ) {
 		datalen = connobj->send(connobj);
+
+		if (datalen <0){
+			serverobj->epollInterface->modify(serverobj->epollInterface->epollbase,connobj,EVENT_READ);
+			log_error("write error!%d",datalen);
+			return;
+		}
 
 	    log_info("send data ip:%s,port:%d,data:%s,len:%d",connobj->ip,connobj->port,connobj->sendptr,datalen);
 
@@ -71,14 +76,6 @@ void event_write(ServerObj *serverobj,ConnObj *connobj)
 	    	connobj->sendptr = NULL;
 	    	connobj->sendlen = 0;
 	    }
-
-	    ret = serverobj->epollInterface->modify(serverobj->epollInterface->epollbase,connobj,EVENT_READ|EPOLLERR);
-
-	    if (ret < 0){
-	    	CStr_Free((char *) connobj->sendptr);
-	    	connobj->sendptr = NULL;
-	    	connobj->sendlen = 0;
-		}
 	}
 }
 

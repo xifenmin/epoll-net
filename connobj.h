@@ -47,6 +47,8 @@ struct tagConnItem{
 	struct tagConnObj *connobj;
     char *recvptr;/*接收数据指针*/
     unsigned int recvlen;/*接收数据长度*/
+    char *sendptr;/*发送数据指针*/
+    unsigned int sendlen;/*发送数据长度*/
 };
 
 ConnObj *CreateNewConnObj(void);
