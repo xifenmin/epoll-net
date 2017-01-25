@@ -4,7 +4,6 @@
  *  Created on: 2015-04-30
  *      Author: xifengming
  *       Email: xifenmin@vip.sina.com
- *
  *    Comments: data struct hash
  *********************************************/
 #ifndef _HASH_H

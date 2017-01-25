@@ -4,7 +4,6 @@
 *  Created on: 2015-12-17
 *      Author: xifengming
 *       Email: xifenmin@vip.sina.com
-*
 *    Comments: log module
  *********************************************/
 

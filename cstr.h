@@ -4,7 +4,6 @@
 *  Created on: 2015-05-10
 *      Author: xifengming
 *       Email: xifenmin@vip.sina.com
-*
 *    Comments: string 
  *********************************************/
 #ifndef _CSTR_H

@@ -4,7 +4,6 @@
  *  Created on: 2015-12-02
  *      Author: xifengming
  *       Email: xifenmin@vip.sina.com
- *
  *    Comments: socket conn pool manage
  *********************************************/
 #ifndef _CONN_MGR_H
