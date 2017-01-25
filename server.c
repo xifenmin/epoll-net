@@ -101,7 +101,7 @@ int Server_Listen(ServerObj *serverobj)
 	addr.sin_family = AF_INET;
 	addr.sin_port   = htons((unsigned short)serverobj->connobj->port);
 
-	if (!strcmp(serverobj->connobj->ip,"0.0.0.0")){
+	if (!strcasecmp(serverobj->connobj->ip,"0.0.0.0")){
 		addr.sin_addr.s_addr = INADDR_ANY;
 	}else{
 		addr.sin_addr.s_addr = inet_addr(serverobj->connobj->ip);

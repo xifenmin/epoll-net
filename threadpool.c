@@ -54,7 +54,6 @@ static void *Threadpool_Run(void *threadpool_obj) {
 		(*(threadpool_task->cb))(threadpool_task->arg);
 		thread_pool->lockerInterface->signalall(thread_pool->lockerInterface->locker);
 		thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
-
 	}
 
 	thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);

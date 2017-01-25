@@ -215,9 +215,9 @@ Logger *Logger_Create(int level,int rotate_size,char *name)
 
 		logger->lockerInterface = LockerInterface_Create();
 
-		if(strcmp(name, "stdout") == 0){
+		if(strcasecmp(name, "stdout") == 0){
 			logger->fp = stdout;
-		}else if(strcmp(name, "stderr") == 0){
+		}else if(strcasecmp(name, "stderr") == 0){
 			logger->fp = stderr;
 		} else {
 			logger->fp = fopen(name, "a");
