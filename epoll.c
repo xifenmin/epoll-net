@@ -94,11 +94,10 @@ void event_read(ServerObj *serverobj,ConnObj *connobj)
 	if (recvlen == 0){
 		serverobj->epollInterface->del(serverobj->epollInterface->epollbase,connobj);
 
+		log_debug("read error push connobj to conn poll,fd:%d!!!",connobj->fd);
+
 		connobj->close(connobj);
 		serverobj->connmgr->set(serverobj->connmgr,connobj);
-
-		log_debug("read error push connobj to conn poll,fd:%d!!!\n",connobj->fd);
-
 		return;
     }
 
@@ -111,7 +110,6 @@ void event_read(ServerObj *serverobj,ConnObj *connobj)
 		item = (Item *) malloc(sizeof(struct tagConnItem));
 
 		if (item != NULL) {
-
 			item->connobj = connobj;
 			item->recvptr = dptr;
 			item->recvlen = recvlen;

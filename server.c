@@ -97,6 +97,7 @@ int Server_Listen(ServerObj *serverobj)
 	}
 
 	bzero(&addr, sizeof(addr));
+
 	addr.sin_family = AF_INET;
 	addr.sin_port   = htons((unsigned short)serverobj->connobj->port);
 
@@ -151,7 +152,7 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 
 	while((client_sock = accept(serverobj->connobj->fd, (struct sockaddr *)&addr, &addrlen)) == -1){
 		if(errno == EINTR){
-			continue;
+
 		}else{
 			return NULL;
 		}
@@ -226,16 +227,19 @@ void Server_Process(void *argv)
 		if (NULL != serverobj) {
 
 			serverobj->lockerInterface->swait(serverobj->lockerInterface->locker);
-			serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
 
 			if (serverobj->rqueueInterface->size(serverobj->rqueueInterface->queue) > 0){
 
+				serverobj->lockerInterface->lock(serverobj->lockerInterface->locker);
+
 				item = serverobj->rqueueInterface->pop(serverobj->rqueueInterface->queue);
-
+				if (item == NULL){
+				   serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
+				   return;
+				}
+				serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
 				if (item != NULL){
-
 					serverobj->procread(item->connobj,item->recvptr,item->recvlen);
-
 					if (item->recvptr != NULL) {
 						CStr_Free(item->recvptr);
 						item->recvptr = NULL;
@@ -244,8 +248,6 @@ void Server_Process(void *argv)
 					item = NULL;
 				}
 			}
-
-			serverobj->lockerInterface->unlock(serverobj->lockerInterface->locker);
 		}
 	 }
 }
@@ -257,7 +259,7 @@ void Server_Loop(void *argv)
 	if (NULL != serverobj){
 
 		for(;;){
-			serverobj->epollInterface->wait(serverobj->epollInterface->epollbase,serverobj,1);
+			serverobj->epollInterface->wait(serverobj->epollInterface->epollbase,serverobj,-1);
 		}
 	}
 }
