@@ -43,20 +43,19 @@ static void *Threadpool_Run(void *threadpool_obj) {
 		}
 
 		threadpool_task = thread_pool->queueInterface->pop(thread_pool->queueInterface->queue);
+		thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
 
 		if (NULL == threadpool_task) {
 			log_error("threadpool_run:thread pool task obj is null!!!");
-			break;
+			thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
+			return NULL;
 		}
 
 		log_info("thread func:%s,pid:%ld", threadpool_task->name,syscall(SYS_gettid));
 
 		(*(threadpool_task->cb))(threadpool_task->arg);
-		thread_pool->lockerInterface->signalall(thread_pool->lockerInterface->locker);
-		thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
 	}
 
-	thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
     pthread_exit(NULL);
 
 	return NULL;
@@ -104,8 +103,8 @@ int Threadpool_Addtask(Threadpool *thread_pool, callback cb,
 
 	thread_pool->lockerInterface->lock(thread_pool->lockerInterface->locker);
 	thread_pool->queueInterface->push(thread_pool->queueInterface->queue,(void *) threadpool_task);
-	thread_pool->lockerInterface->signal(thread_pool->lockerInterface->locker);
 	thread_pool->lockerInterface->unlock(thread_pool->lockerInterface->locker);
+	thread_pool->lockerInterface->signal(thread_pool->lockerInterface->locker);
 
 	return 0;
 }

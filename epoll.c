@@ -63,7 +63,13 @@ void event_write(ServerObj *serverobj,ConnObj *connobj)
 	if (connobj->sendptr != NULL && connobj->sendlen > 0 ) {
 		datalen = connobj->send(connobj);
 
-		if (datalen <0){
+		if (datalen ==-2){
+			serverobj->epollInterface->modify(serverobj->epollInterface->epollbase,connobj,EVENT_WRITE);
+			log_error("write error!%d",datalen);
+			return;
+		}
+
+		if (datalen == -1){
 			serverobj->epollInterface->modify(serverobj->epollInterface->epollbase,connobj,EVENT_READ);
 			log_error("write error!%d",datalen);
 			return;
@@ -76,6 +82,8 @@ void event_write(ServerObj *serverobj,ConnObj *connobj)
 	    	connobj->sendptr = NULL;
 	    	connobj->sendlen = 0;
 	    }
+
+	    serverobj->epollInterface->modify(serverobj->epollInterface->epollbase,connobj,EVENT_READ);
 	}
 }
 

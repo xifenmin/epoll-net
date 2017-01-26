@@ -20,7 +20,7 @@ ServerObj * StartServer(char *ip,unsigned short port,ProcRead procread)
  {
 	ServerObj *serverobj = NULL;
 	int ret  = -1;
-
+    int i    = 0;
 	if (serverobj == NULL) {
 
 		serverobj = Server_Create(1024);
@@ -37,8 +37,10 @@ ServerObj * StartServer(char *ip,unsigned short port,ProcRead procread)
 			if (ret <0)
 				return NULL;
 
-			Threadpool_Addtask(serverobj->datathread,&Server_Process,
-							"Server_Process", serverobj);
+			for (;i<5;i++){
+				Threadpool_Addtask(serverobj->datathread,&Server_Process,
+								  "Server_Process", serverobj);
+			}
 
 			Threadpool_Addtask(serverobj->serverthread,&Server_Loop,
 					"Server_Loop", serverobj);
@@ -182,7 +184,7 @@ ConnObj  *Server_Accept(ServerObj *serverobj)
 		_connobj->nodelay(_connobj,1);
 		_connobj->noblock(_connobj,1);
 
-		if (serverobj->epollInterface->add(serverobj->epollInterface->epollbase,_connobj,EPOLLOUT|EPOLLET|EPOLLIN|EPOLLRDHUP) !=0 ){
+		if (serverobj->epollInterface->add(serverobj->epollInterface->epollbase,_connobj,EPOLLET|EPOLLIN|EPOLLRDHUP) !=0 ){
            /*add fail*/
 			serverobj->connmgr->set(serverobj->connmgr,_connobj);
 			goto sock_err;
@@ -217,6 +219,8 @@ int  ServerSend(ServerObj *serverobj,ConnObj *connobj,char *data,int len)
 
      	connobj->sendptr = (unsigned char *)dptr;
     	connobj->sendlen = len;
+
+    	serverobj->epollInterface->modify(serverobj->epollInterface->epollbase,connobj,EVENT_WRITE);
     }
 
     return result;

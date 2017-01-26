@@ -88,7 +88,7 @@ int readdata(ConnObj *connobj,char *rdata,int len)
 		//nlen = Decode(rdata,len,data);
 		//log_hex(connobj->ip,connobj->port,data,nlen,"Recv:","");
 
-	    ServerSend(serverobj,connobj,"hello,world\n",strlen("hello,world\n"));
+	    //ServerSend(serverobj,connobj,"hello,world\n",strlen("hello,world\n"));
 	}
 
 	return 0;
