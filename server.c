@@ -16,6 +16,8 @@
 #include "server.h"
 #include "cstr.h"
 
+#define MAX_WORK_THREAD       5
+
 ServerObj * StartServer(char *ip,unsigned short port,ProcRead procread)
  {
 	ServerObj *serverobj = NULL;
@@ -37,7 +39,7 @@ ServerObj * StartServer(char *ip,unsigned short port,ProcRead procread)
 			if (ret <0)
 				return NULL;
 
-			for (;i<5;i++){
+			for (;i<MAX_WORK_THREAD;i++){
 				Threadpool_Addtask(serverobj->datathread,&Server_Process,
 								  "Server_Process", serverobj);
 			}

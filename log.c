@@ -74,34 +74,47 @@ static void rotate(Logger *logger)
 	char newpath[PATH_MAX];
 	time_t time;
 	struct timeval tv;
-	struct tm *tm;
+	struct tm tm;
+
+	int ret = -1;
 
 	if (NULL == logger)
 		return;
 
-	fclose(logger->fp);
 	logger->fp = NULL;
 	gettimeofday(&tv, NULL);
 
 	time = tv.tv_sec;
-	tm   = localtime(&time);
+	localtime_r(&time,&tm);
 
 	sprintf(newpath, "%s.%04d%02d%02d-%02d%02d%02d",
 		logger->name,
-		tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-		tm->tm_hour, tm->tm_min, tm->tm_sec);
+		tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+		tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-	int ret = rename(logger->name,newpath);
+	ret = rename(logger->name,newpath);
+
 	if(ret == -1){
 		return;
 	}
+
+	FILE *tmp_fp = logger->fp;
 
 	logger->fp = fopen(logger->name, "a");
 
 	if(logger->fp == NULL){
 		return;
 	}
-	logger->wcurr = 0;
+
+	logger->wcurr  = 0;
+	logger->wtotal = 0;
+
+	if (tmp_fp != NULL){
+		ret = fclose(tmp_fp);
+		if (!ret){
+			return;
+		}
+	}
 }
 
 static int logv(char *fmt,char *data,int datalen,va_list ap)
@@ -124,7 +137,7 @@ static int logv(char *fmt,char *data,int datalen,va_list ap)
 
 	time_t time;
 	struct timeval tv;
-	struct tm *tm;
+	struct tm tm;
 	int space = 0;
 
 	unsigned int index = 0;
@@ -132,13 +145,13 @@ static int logv(char *fmt,char *data,int datalen,va_list ap)
 	gettimeofday(&tv, NULL);
 
 	time = tv.tv_sec;
-	tm   = localtime(&time);
+	localtime_r(&time,&tm);
 
 	/* %3ld 在数值位数超过3位的时候不起作用, 所以这里转成int */
 
 	len = sprintf(ptr, "%04d-%02d-%02d %02d:%02d:%02d.%03d ",
-			      tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour,
-			      tm->tm_min, tm->tm_sec, (int) (tv.tv_usec / 1000));
+			      tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour,
+			      tm.tm_min, tm.tm_sec, (int) (tv.tv_usec / 1000));
 
 	if (len < 0) {
 		return -1;
@@ -181,8 +194,6 @@ static int logv(char *fmt,char *data,int datalen,va_list ap)
 
 	len = ptr - buf;
 
-	logger->lockerInterface->lock(logger->lockerInterface->locker);
-
     fwrite(buf, len, 1, logger->fp);
 	fflush(logger->fp);
 
@@ -193,7 +204,6 @@ static int logv(char *fmt,char *data,int datalen,va_list ap)
 		rotate(logger);
 	}
 
-	logger->lockerInterface->unlock(logger->lockerInterface->locker);
 	return 0;
 }
 
@@ -252,11 +262,16 @@ int logerror(int level,char *fmt, ...)
 	if (NULL == logger)
 		return -1;
 
+	logger->lockerInterface->lock(logger->lockerInterface->locker);
+
 	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
 	ret = logv(fmt,NULL,0,ap);
 	va_end(ap);
+
+	logger->lockerInterface->unlock(logger->lockerInterface->locker);
+
 	return ret;
 }
 
@@ -268,11 +283,13 @@ int logdebug(int level,char *fmt, ...)
 	if (NULL == logger)
 	   return -1;
 
+	logger->lockerInterface->lock(logger->lockerInterface->locker);
 	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
 	ret = logv(fmt,NULL,0,ap);
 	va_end(ap);
+	logger->lockerInterface->unlock(logger->lockerInterface->locker);
 
 	return ret;
 }
@@ -286,27 +303,33 @@ int logwarn(int level,char *fmt, ...)
 	if (NULL == logger)
 	   return -1;
 
+	logger->lockerInterface->lock(logger->lockerInterface->locker);
+
 	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
 	ret = logv(fmt,NULL,0,ap);
 	va_end(ap);
+	logger->lockerInterface->unlock(logger->lockerInterface->locker);
+
 	return ret;
 }
 
 int loginfo(int level,char *fmt,...)
 {
 	Logger *logger = &loggobj;
-
 	int ret = 0;
+
 	if (NULL == logger)
 		return -1;
 
+	logger->lockerInterface->lock(logger->lockerInterface->locker);
 	setlevel(level);
 	va_list ap;
 	va_start(ap, fmt);
 	ret = logv(fmt,NULL,0,ap);
 	va_end(ap);
+	logger->lockerInterface->unlock(logger->lockerInterface->locker);
 
 	return ret;
 }
@@ -320,11 +343,13 @@ int loghex(char *data,int datalen,char *fmt,...)
 	if (NULL == logger)
 		return -1;
 
+	logger->lockerInterface->lock(logger->lockerInterface->locker);
 	setlevel(LEVEL_HEX);
 	va_list ap;
 	va_start(ap,fmt);
 	ret = logv(fmt,data,datalen,ap);
 	va_end(ap);
+	logger->lockerInterface->unlock(logger->lockerInterface->locker);
 
 	return ret;
 }

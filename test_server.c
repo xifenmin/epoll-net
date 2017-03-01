@@ -14,7 +14,7 @@
 #include "log.h"
 #include "cstr.h"
 
-#define  FILE_NAME "/home/xifengming/epoll-net/log/test_server.log"
+#define  FILE_NAME "/tmp/epoll-net/log/test_server.log"
 
 typedef struct tagtest
 {
@@ -83,7 +83,7 @@ int readdata(ConnObj *connobj,char *rdata,int len)
 	//int  nlen     = 0;
 
 	if (NULL != connobj && connobj->activity == SOCKET_CONNECTED && rdata!= NULL){
-		log_info("fd:%d,addr:%p,info:%s,len:%d",connobj->fd,connobj,rdata,len);
+		//log_info("fd:%d,addr:%p,info:%s,len:%d",connobj->fd,connobj,rdata,len);
 
 		//nlen = Decode(rdata,len,data);
 		//log_hex(connobj->ip,connobj->port,data,nlen,"Recv:","");
@@ -102,9 +102,10 @@ int main(int argc,char **argv)
        return -1;
 
 	port = atoi(argv[2]);
-	serverobj = StartServer(argv[1],port,readdata);
 
 	Logger_Create(LEVEL_INFO,10,FILE_NAME);
+
+	serverobj = StartServer(argv[1],port,readdata);
 
 	printf("Start Server:%p\n",serverobj);
 
